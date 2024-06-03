@@ -15,7 +15,7 @@ from langcraft.llm.llm_action import (
     ConversationTurn,
     AssistantConversationTurn,
     ToolRequest,
-    Actions
+    Actions,
 )
 
 
@@ -88,7 +88,7 @@ class GPTChatAction(LanguageAction):
                     "name": action_descriptor.name,
                     "description": action_descriptor.description,
                     "parameters": action_descriptor.brief.to_schema(),
-                }
+                },
             }
             for action_descriptor in list(
                 map(lambda tool_name: Actions.get(tool_name), tool_names)
@@ -118,7 +118,7 @@ class GPTChatAction(LanguageAction):
 
         for turn in brief.conversation:
             content = []
-            for image in (turn.message.images or []):
+            for image in turn.message.images or []:
                 content.append(
                     {
                         "type": "image_url",
@@ -152,10 +152,8 @@ class GPTChatAction(LanguageAction):
         text_response = None
         tool_requests = []
 
-        history = brief.conversation.copy()
-
         for response_element in response.choices:
-            if response_element.message.content: 
+            if response_element.message.content:
                 text_response = response_element.message.content.strip(" \n")
             if response_element.message.tool_calls is not None:
                 for tool_call in response_element.message.tool_calls:
@@ -163,22 +161,23 @@ class GPTChatAction(LanguageAction):
                         ToolRequest(
                             request_id=tool_call.id,
                             tool_name=tool_call.function.name,
-                            tool_input=json.loads(tool_call.function.arguments),
+                            tool_input=Actions.create_brief(
+                                tool_call.function.name,
+                                json.loads(tool_call.function.arguments),
+                            ),
                         )
                     )
 
-        history.append(
-            AssistantConversationTurn(
-                message=Message(text=text_response) if text_response else None,
-                tool_requests=tool_requests,
-            )
+        turn = AssistantConversationTurn(
+            message=Message(text=text_response) if text_response else None,
+            tool_requests=tool_requests,
         )
 
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            response=text_response,
-            conversation=history,
+            result=text_response or "<tool call>",
+            conversation_turn=turn,
             input_tokens=response.usage.prompt_tokens,
             output_tokens=response.usage.completion_tokens,
         )

@@ -23,7 +23,6 @@ class MessageRole(Enum):
     ASSISTANT = "assistant"
 
 
-
 #################################################
 class Image(BaseModel):
     """
@@ -83,7 +82,10 @@ class ToolRequest(BaseModel):
 
     request_id: str = Field(description="The ID of the request.")
     tool_name: str = Field(description="The name of the tool.")
-    tool_input: Dict = Field(description="The input to the tool.")
+    tool_input: object = Field(description="The brief for the tool.")
+
+    def run_tool(self) -> ActionResult:
+        return Actions.get(self.tool_name).action().run(self.tool_input)
 
 
 #################################################
@@ -94,7 +96,7 @@ class ToolResponse(BaseModel):
 
     request_id: str = Field(description="The ID of the request.")
     tool_name: str = Field(description="The name of the tool.")
-    tool_result: str = Field(description="The result of the tool execution.")
+    tool_result: object = Field(description="The result of the tool execution.")
 
 
 #################################################
@@ -102,17 +104,25 @@ class ConversationTurn(BaseModel):
     """
     Represents a single turn in a conversation.
     """
-    role:MessageRole = Field(description="The role of the message.")
-    message: Optional[Message] = Field(description="The content of the respective party's message.", default=None)
-    
+
+    role: MessageRole = Field(description="The role of the message.")
+    message: Optional[Message] = Field(
+        description="The content of the respective party's message.", default=None
+    )
+
 
 #################################################
 class UserConversationTurn(ConversationTurn):
     """
     Represents a single turn in a conversation by a user.
     """
-    role:MessageRole = Field(description="The role of the message.", default=MessageRole.USER, frozen=True)
-    tool_results: List[ToolResponse] = Field(description="The tool responses; only if this is a user turn.", default=None)
+
+    role: MessageRole = Field(
+        description="The role of the message.", default=MessageRole.USER, frozen=True
+    )
+    tool_results: List[ToolResponse] = Field(
+        description="The tool responses; only if this is a user turn.", default=None
+    )
 
 
 #################################################
@@ -120,8 +130,20 @@ class AssistantConversationTurn(ConversationTurn):
     """
     Represents a single turn in a conversation by the assistant.
     """
-    role:MessageRole = Field(description="The role of the message.", default=MessageRole.ASSISTANT, frozen=True)
-    tool_requests: List[ToolRequest] = Field(description="The tool requests; only if this is an assistant turn.", default=None)
+
+    role: MessageRole = Field(
+        description="The role of the message.",
+        default=MessageRole.ASSISTANT,
+        frozen=True,
+    )
+    tool_requests: List[ToolRequest] = Field(
+        description="The tool requests; only if this is an assistant turn.",
+        default=None,
+    )
+
+    def run_tools(self):
+        for tool_request in self.tool_requests:
+            tool_request.run_tool()
 
 
 #################################################
@@ -171,9 +193,34 @@ class ConversationBrief(LanguageActionBrief):
     A brief for a chat language action.
     """
 
-    conversation: List[ConversationTurn] = Field(
+    conversation: List = Field(
         description="The conversation history."
     )
+
+    def has_pending_tool_calls(self):
+        return (
+            len(self.conversation) > 0
+            and self.conversation[-1].role == MessageRole.ASSISTANT
+            and self.conversation[-1].tool_requests
+            and len(self.conversation[-1].tool_requests) > 0
+        )
+
+    def extend_conversation(self, turn: ConversationTurn, run_tools: bool = True):
+        self.conversation.append(turn)
+
+        if self.has_pending_tool_calls() and run_tools:
+            self.extend_conversation(
+                UserConversationTurn(
+                    tool_results=[
+                        ToolResponse(
+                            request_id=tool_request.request_id,
+                            tool_name=tool_request.tool_name,
+                            tool_result=tool_request.run_tool().result,
+                        )
+                        for tool_request in self.conversation[-1].tool_requests
+                    ]
+                )
+            )
 
 
 #################################################
@@ -181,8 +228,6 @@ class CompletionResult(ActionResult):
     """
     Represents the result of a completion action.
     """
-
-    response: Optional[str] = Field(description="The completion.", default=None)
 
     model_name: str = Field(description="The name of the LLM used for completion.")
     input_tokens: Optional[int] = Field(
@@ -195,9 +240,7 @@ class CompletionResult(ActionResult):
     class Config:
         protected_namespaces = ()
 
-    conversation: List = Field(
-        description="The updated conversation history."
-    )
+    conversation_turn: object = Field(description="The response turn in the conversation.")
 
 
 #################################################
@@ -259,6 +302,7 @@ class LanguageAction(Action):
             logging.getLogger("langcraft").info(
                 result.__class__.__name__ + ":\n" + result.model_dump_json(indent=2)
             )
+
 
 #################################################
 class ChatAction(LanguageAction):

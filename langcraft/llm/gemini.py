@@ -129,34 +129,32 @@ class GeminiChatAction(LanguageAction):
         text_response = None
         tool_requests = []
 
-        history = brief.conversation.copy()
-
         for response_element in response.candidates:
-            if response_element.function_calls: 
+            if response_element.function_calls:
                 for tool_call in response_element.function_calls:
                     tool_requests.append(
                         ToolRequest(
                             request_id=tool_call.name,
                             tool_name=tool_call.name,
-                            tool_input=tool_call.args,
+                            tool_input=Actions.create_brief(
+                                tool_call.name, tool_call.args
+                            ),
                         )
                     )
 
             else:
-               text_response = response_element.text.strip(" \n")
+                text_response = response_element.text.strip(" \n")
 
-        history.append(
-            AssistantConversationTurn(
-                message=Message(text=text_response) if text_response else None,
-                tool_requests=tool_requests,
-            )
+        turn = AssistantConversationTurn(
+            message=Message(text=text_response) if text_response else None,
+            tool_requests=tool_requests,
         )
 
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            response=text_response,
-            conversation=history,
+            result=text_response or "<tool call>",
+            conversation_turn=turn,
             input_tokens=response.usage_metadata.prompt_token_count,
             output_tokens=response.usage_metadata.candidates_token_count,
         )

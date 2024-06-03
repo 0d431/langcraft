@@ -73,6 +73,8 @@ class ActionResult(BaseModel):
     Base class for action results, providing the output of an action.
     """
 
+    result: str = Field(description="The string representation of the action result.")
+
     success: bool = Field(
         description="True if the action was successful, False otherwise.", default=True
     )
@@ -253,7 +255,7 @@ class Actions:
         cls._action_descriptors[name] = action_descriptor
 
     @classmethod
-    def get(cls, name: str):
+    def get(cls, name: str) -> ActionDescriptor:
         """
         Returns the action descriptor with the given name.
 
@@ -264,3 +266,17 @@ class Actions:
             ActionDescriptor: The action descriptor.
         """
         return cls._action_descriptors[name]
+
+    @classmethod
+    def create_brief(cls, name: str, parameters: Dict) -> ActionBrief:
+        """
+        Create an action brief from the given action name and parameters.
+
+        Args:
+            name (str): The name of the action.
+            parameters (Dict): The parameters for the action.
+
+        Returns:
+            ActionBrief: The created action brief.
+        """
+        return Actions.get(name).brief(**parameters)

@@ -23,20 +23,25 @@ class WeatherTool(langcraft.Action):
             result=langcraft.ActionResult,
         )
 
+    def _run_one(self, brief: WeatherBrief):
+        return langcraft.ActionResult(result="pretty darn hot at 37 C")
+
 
 langcraft.Actions.register(WeatherTool.get_descriptor())
 
 if __name__ == "__main__":
-    action = langcraft.CompletionAction()
-    brief = langcraft.PromptBrief(
-        model_name=langcraft.LLMs.get_model_name("gemini"),
+    action = langcraft.ChatAction()
+    brief = langcraft.ConversationBrief(
+        model_name=langcraft.LLMs.get_model_name("gemi"),
         tools=[WeatherTool.NAME],
-        prompt=langcraft.Message(
-            text="What is the temperature in New York?",
-        ),
+        conversation=[
+            langcraft.UserConversationTurn(
+                message=langcraft.Message(text="What is the temperature in New York?"),
+            )
+        ],
     )
 
     result = action.run(brief)
+    brief.extend_conversation(result.conversation_turn)
 
-    print(result.model_dump_json(indent=2, exclude_none=True))
-
+    print(brief.model_dump_json(indent=2, exclude_none=True))

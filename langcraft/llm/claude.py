@@ -11,7 +11,7 @@ from langcraft.llm.llm_action import (
     MessageRole,
     AssistantConversationTurn,
     ToolRequest,
-    Actions
+    Actions,
 )
 
 
@@ -85,7 +85,7 @@ class ClaudeChatAction(LanguageAction):
         messages = []
         for turn in brief.conversation:
             content = []
-            for image in (turn.message.images or []):
+            for image in turn.message.images or []:
                 content.append(
                     {
                         "type": "image",
@@ -121,32 +121,30 @@ class ClaudeChatAction(LanguageAction):
         text_response = None
         tool_requests = []
 
-        history = brief.conversation.copy()
-
         for response_element in response.content:
-            if response_element.type == "text": 
+            if response_element.type == "text":
                 text_response = response_element.text.strip(" \n")
             elif response_element.type == "tool_use":
                 tool_requests.append(
                     ToolRequest(
                         request_id=response_element.id,
                         tool_name=response_element.name,
-                        tool_input=response_element.input,
+                        tool_input=Actions.create_brief(
+                            response_element.name, response_element.input
+                        ),
                     )
                 )
 
-        history.append(
-            AssistantConversationTurn(
-                message=Message(text=text_response) if text_response else None,
-                tool_requests=tool_requests,
-            )
+        turn = AssistantConversationTurn(
+            message=Message(text=text_response) if text_response else None,
+            tool_requests=tool_requests,
         )
 
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            response=text_response,
-            conversation=history,
+            result=text_response or "<tool call>",
+            conversation_turn=turn,
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
         )
