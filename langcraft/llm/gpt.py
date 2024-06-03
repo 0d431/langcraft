@@ -1,17 +1,21 @@
 import os
-from typing import List
+from typing import List, Dict
+import json
 import httpx
 import openai
 import logging
 from langcraft.action import ActionDescriptor
 from langcraft.llm.llm_action import (
     LanguageAction,
-    ChatBrief,
-    ChatResult,
+    ConversationBrief,
+    CompletionResult,
     ChatAction,
     Message,
     MessageRole,
     ConversationTurn,
+    AssistantConversationTurn,
+    ToolRequest,
+    Actions
 )
 
 
@@ -66,7 +70,32 @@ class GPTChatAction(LanguageAction):
     A chat action that uses GPT to generate chats.
     """
 
-    def _run_one(self, brief: ChatBrief) -> ChatResult:
+    def _compile_tools(self, tool_names: List[str]) -> List[Dict]:
+        """
+        Compile a list of tools into a list of dictionaries.
+
+        Args:
+            tools (List[str]): A list of names of tools.
+
+        Returns:
+            List[Dict]: A list of dictionaries containing the compiled tool information.
+
+        """
+        return [
+            {
+                "type": "function",
+                "function": {
+                    "name": action_descriptor.name,
+                    "description": action_descriptor.description,
+                    "parameters": action_descriptor.brief.to_schema(),
+                }
+            }
+            for action_descriptor in list(
+                map(lambda tool_name: Actions.get(tool_name), tool_names)
+            )
+        ]
+
+    def _run_one(self, brief: ConversationBrief) -> CompletionResult:
         """
         Executes the Chat action.
 
@@ -89,7 +118,7 @@ class GPTChatAction(LanguageAction):
 
         for turn in brief.conversation:
             content = []
-            for image in turn.message.images:
+            for image in (turn.message.images or []):
                 content.append(
                     {
                         "type": "image_url",
@@ -112,26 +141,41 @@ class GPTChatAction(LanguageAction):
         response = client.chat.completions.create(
             model=brief.model_name,
             messages=messages,
+            tools=self._compile_tools(brief.tools),
             temperature=brief.temperature,
             max_tokens=brief.max_tokens,
             stop=brief.stop or openai.NotGiven(),
             seed=42,
         )
 
-        # get text response
-        text_response = response.choices[0].message.content.strip(" \n")
+        # parse response
+        text_response = None
+        tool_requests = []
 
-        # construct updated message history
         history = brief.conversation.copy()
+
+        for response_element in response.choices:
+            if response_element.message.content: 
+                text_response = response_element.message.content.strip(" \n")
+            if response_element.message.tool_calls is not None:
+                for tool_call in response_element.message.tool_calls:
+                    tool_requests.append(
+                        ToolRequest(
+                            request_id=tool_call.id,
+                            tool_name=tool_call.function.name,
+                            tool_input=json.loads(tool_call.function.arguments),
+                        )
+                    )
+
         history.append(
-            ConversationTurn(
-                role=MessageRole.ASSISTANT,
-                message=Message(text=text_response),
+            AssistantConversationTurn(
+                message=Message(text=text_response) if text_response else None,
+                tool_requests=tool_requests,
             )
         )
 
         # return result
-        return ChatResult(
+        return CompletionResult(
             model_name=brief.model_name,
             response=text_response,
             conversation=history,

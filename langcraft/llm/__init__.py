@@ -1,13 +1,13 @@
 from langcraft.llm.llm_models import LLMs
 from langcraft.llm.llm_action import (
-    ChatBrief,
-    ChatResult,
-    CompletionBrief,
+    ConversationBrief,
+    PromptBrief,
     CompletionResult,
     Image,
     Message,
     MessageRole,
-    ConversationTurn,
+    UserConversationTurn,
+    AssistantConversationTurn,
     ChatAction,
     CompletionAction,
     LanguageAction,
@@ -16,3 +16,4 @@ from langcraft.llm.llm_action import (
 from langcraft.llm.claude import ClaudeChatAction
 from langcraft.llm.gpt import GPTChatAction
 from langcraft.llm.gemini import GeminiChatAction
+

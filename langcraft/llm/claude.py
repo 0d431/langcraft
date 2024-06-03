@@ -1,18 +1,17 @@
 import os
-from typing import List
+from typing import List, Dict
 import httpx
 import anthropic
-from langcraft.action import ActionDescriptor
 from langcraft.llm.llm_action import (
     LanguageAction,
-    ChatBrief,
-    ChatResult,
+    ConversationBrief,
     ChatAction,
+    CompletionResult,
     Message,
     MessageRole,
-    ConversationTurn,
+    AssistantConversationTurn,
     ToolRequest,
-    ToolResponse,
+    Actions
 )
 
 
@@ -50,7 +49,29 @@ class ClaudeChatAction(LanguageAction):
     A chat action that uses Claude to generate chats.
     """
 
-    def _run_one(self, brief: ChatBrief) -> ChatResult:
+    def _compile_tools(self, tool_names: List[str]) -> List[Dict]:
+        """
+        Compile a list of tools into a list of dictionaries.
+
+        Args:
+            tools (List[str]): A list of names of tools.
+
+        Returns:
+            List[Dict]: A list of dictionaries containing the compiled tool information.
+
+        """
+        return [
+            {
+                "name": action_descriptor.name,
+                "description": action_descriptor.description,
+                "input_schema": action_descriptor.brief.to_schema(),
+            }
+            for action_descriptor in list(
+                map(lambda tool_name: Actions.get(tool_name), tool_names)
+            )
+        ]
+
+    def _run_one(self, brief: ConversationBrief) -> CompletionResult:
         """
         Executes the Chat action.
 
@@ -64,7 +85,7 @@ class ClaudeChatAction(LanguageAction):
         messages = []
         for turn in brief.conversation:
             content = []
-            for image in turn.message.images:
+            for image in (turn.message.images or []):
                 content.append(
                     {
                         "type": "image",
@@ -84,53 +105,45 @@ class ClaudeChatAction(LanguageAction):
                 }
             )
 
-        # compile tools
-        tool_descriptions = self._compile_tools(brief.tools)
-
         # obtain completion
         client = AnthropicClient.get()
         response = client.messages.create(
             model=brief.model_name,
             system=brief.system if brief.system else "",
             messages=messages,
-            tools=tool_descriptions,
+            tools=self._compile_tools(brief.tools),
             temperature=brief.temperature,
             max_tokens=brief.max_tokens,
             stop_sequences=[brief.stop] if brief.stop else None,
         )
 
-        # tool use?
-        if response.stop_reason == "tool_use":
-            # no text response
-            text_response = response.content[0].text.strip(" \n")
+        # parse response
+        text_response = None
+        tool_requests = []
 
-            # construct updated message history
-            history = brief.conversation.copy()
-            history.append(
-                ConversationTurn(
-                    role=MessageRole.TOOL_REQUEST,
-                    message=ToolRequest(
-                        request_id=response.content[-1].id,
-                        tool_name=response.content[-1].name,
-                        tool_input=response.content[-1].input,
-                    ),
-                )
-            )
-        else:
-            # plain response
-            text_response = response.content[0].text.strip(" \n")
+        history = brief.conversation.copy()
 
-            # construct updated message history
-            history = brief.conversation.copy()
-            history.append(
-                ConversationTurn(
-                    role=MessageRole.ASSISTANT,
-                    message=Message(text=text_response),
+        for response_element in response.content:
+            if response_element.type == "text": 
+                text_response = response_element.text.strip(" \n")
+            elif response_element.type == "tool_use":
+                tool_requests.append(
+                    ToolRequest(
+                        request_id=response_element.id,
+                        tool_name=response_element.name,
+                        tool_input=response_element.input,
+                    )
                 )
+
+        history.append(
+            AssistantConversationTurn(
+                message=Message(text=text_response) if text_response else None,
+                tool_requests=tool_requests,
             )
+        )
 
         # return result
-        return ChatResult(
+        return CompletionResult(
             model_name=brief.model_name,
             response=text_response,
             conversation=history,

@@ -28,8 +28,8 @@ langcraft.Actions.register(WeatherTool.get_descriptor())
 
 if __name__ == "__main__":
     action = langcraft.CompletionAction()
-    brief = langcraft.CompletionBrief(
-        model_name=langcraft.LLMs.get_model_name("claude-3-h"),
+    brief = langcraft.PromptBrief(
+        model_name=langcraft.LLMs.get_model_name("gemini"),
         tools=[WeatherTool.NAME],
         prompt=langcraft.Message(
             text="What is the temperature in New York?",
@@ -38,4 +38,5 @@ if __name__ == "__main__":
 
     result = action.run(brief)
 
-    print(result.model_dump_json(indent=2))
+    print(result.model_dump_json(indent=2, exclude_none=True))
+

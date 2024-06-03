@@ -21,8 +21,7 @@ class MessageRole(Enum):
 
     USER = "user"
     ASSISTANT = "assistant"
-    TOOL_REQUEST = "tool_request"
-    TOOL_RESULT = "tool_result"
+
 
 
 #################################################
@@ -72,7 +71,7 @@ class Message(BaseModel):
     text: str = Field(description="The text part of the message.")
     images: Optional[List[Image]] = Field(
         description="The images in the message.",
-        default=[],
+        default=None,
     )
 
 
@@ -103,11 +102,26 @@ class ConversationTurn(BaseModel):
     """
     Represents a single turn in a conversation.
     """
+    role:MessageRole = Field(description="The role of the message.")
+    message: Optional[Message] = Field(description="The content of the respective party's message.", default=None)
+    
 
-    role: MessageRole = Field(description="The role of party uttering the message.")
-    message: Union[Message, ToolRequest, ToolResponse] = Field(
-        description="The content of the respective party's message."
-    )
+#################################################
+class UserConversationTurn(ConversationTurn):
+    """
+    Represents a single turn in a conversation by a user.
+    """
+    role:MessageRole = Field(description="The role of the message.", default=MessageRole.USER, frozen=True)
+    tool_results: List[ToolResponse] = Field(description="The tool responses; only if this is a user turn.", default=None)
+
+
+#################################################
+class AssistantConversationTurn(ConversationTurn):
+    """
+    Represents a single turn in a conversation by the assistant.
+    """
+    role:MessageRole = Field(description="The role of the message.", default=MessageRole.ASSISTANT, frozen=True)
+    tool_requests: List[ToolRequest] = Field(description="The tool requests; only if this is an assistant turn.", default=None)
 
 
 #################################################
@@ -141,7 +155,7 @@ class LanguageActionBrief(ActionBrief):
 
 
 #################################################
-class CompletionBrief(LanguageActionBrief):
+class PromptBrief(LanguageActionBrief):
     """
     A brief for a completion language action.
     """
@@ -152,7 +166,7 @@ class CompletionBrief(LanguageActionBrief):
 
 
 #################################################
-class ChatBrief(LanguageActionBrief):
+class ConversationBrief(LanguageActionBrief):
     """
     A brief for a chat language action.
     """
@@ -168,7 +182,7 @@ class CompletionResult(ActionResult):
     Represents the result of a completion action.
     """
 
-    response: str = Field(description="The completion.")
+    response: Optional[str] = Field(description="The completion.", default=None)
 
     model_name: str = Field(description="The name of the LLM used for completion.")
     input_tokens: Optional[int] = Field(
@@ -181,14 +195,7 @@ class CompletionResult(ActionResult):
     class Config:
         protected_namespaces = ()
 
-
-#################################################
-class ChatResult(CompletionResult):
-    """
-    Represents the result of a chat action.
-    """
-
-    conversation: List[ConversationTurn] = Field(
+    conversation: List = Field(
         description="The updated conversation history."
     )
 
@@ -253,29 +260,6 @@ class LanguageAction(Action):
                 result.__class__.__name__ + ":\n" + result.model_dump_json(indent=2)
             )
 
-    def _compile_tools(self, tool_names: List[str]) -> List[Dict]:
-        """
-        Compile a list of tools into a list of dictionaries.
-
-        Args:
-            tools (List[str]): A list of names of tools.
-
-        Returns:
-            List[Dict]: A list of dictionaries containing the compiled tool information.
-
-        """
-        return [
-            {
-                "name": action_descriptor.name,
-                "description": action_descriptor.description,
-                "input_schema": action_descriptor.brief.to_schema(),
-            }
-            for action_descriptor in list(
-                map(lambda tool_name: Actions.get(tool_name), tool_names)
-            )
-        ]
-
-
 #################################################
 class ChatAction(LanguageAction):
     """
@@ -287,9 +271,9 @@ class ChatAction(LanguageAction):
         return ActionDescriptor(
             name="llm-chat",
             description="Generates a completion for a chat conversation, using an LLM.",
-            brief=ChatBrief,
+            brief=ConversationBrief,
             action=cls,
-            result=ChatResult,
+            result=CompletionResult,
         )
 
     _chat_action_implementations: Dict[str, LanguageAction] = {}
@@ -385,7 +369,7 @@ class CompletionAction(LanguageAction):
         return ActionDescriptor(
             name="llm-complete",
             description="Generates a completion for a prompt, using an LLM.",
-            brief=CompletionBrief,
+            brief=PromptBrief,
             action=cls,
             result=CompletionResult,
         )
@@ -401,12 +385,11 @@ class CompletionAction(LanguageAction):
             ActionResult: The result of running the action.
         """
         return ChatAction().run(
-            ChatBrief(
+            ConversationBrief(
                 model_name=brief.model_name,
                 tools=brief.tools,
                 conversation=[
-                    ConversationTurn(
-                        role=MessageRole.USER,
+                    UserConversationTurn(
                         message=(
                             brief.prompt
                             if isinstance(brief.prompt, Message)
@@ -429,11 +412,10 @@ class CompletionAction(LanguageAction):
         """
         return ChatAction().run(
             [
-                ChatBrief(
+                ConversationBrief(
                     model_name=brief.model_name,
                     conversation=[
-                        ConversationTurn(
-                            role=MessageRole.USER,
+                        UserConversationTurn(
                             message=(
                                 brief.prompt
                                 if isinstance(brief.prompt, Message)
