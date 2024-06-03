@@ -1,0 +1,1317 @@
+============================================================
+2024-06-03 11:40:59 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gemini-1.5-flash-001",
+  "system": null,
+  "tools": [],
+  "max_tokens": 8192,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:41:02 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00016659999999999998,
+  "latency": 2811.2988471984863,
+  "response": "The image shows a brown foal lying down in a field of green grass. The foal has a pink flower crown on its head. The image is captioned with the text \"This actually is my first rodeo and I'm very scared\". The image is meant to be humorous and relatable to anyone who has ever felt nervous or scared about trying something new.",
+  "model_name": "gemini-1.5-flash-001",
+  "input_tokens": 266,
+  "output_tokens": 70,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image shows a brown foal lying down in a field of green grass. The foal has a pink flower crown on its head. The image is captioned with the text \"This actually is my first rodeo and I'm very scared\". The image is meant to be humorous and relatable to anyone who has ever felt nervous or scared about trying something new.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:41:55 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:42:07 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:42:58 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:43:00 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00039475,
+  "latency": 2284.4948768615723,
+  "response": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 1244,
+  "output_tokens": 67,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:46:01 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:48:23 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:48:39 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:48:41 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00051,
+  "latency": 1181.2949180603027,
+  "response": "I'm sorry, but I can't view images. However, if you describe the image to me, I can help you analyze or understand it better!",
+  "model_name": "gpt-4o",
+  "input_tokens": 15,
+  "output_tokens": 29,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "I'm sorry, but I can't view images. However, if you describe the image to me, I can help you analyze or understand it better!",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:48:57 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:51:57 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:53:25 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 11:58:46 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:01:00 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:01:10 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.010025,
+  "latency": 9866.307258605957,
+  "response": "The image is a screenshot of a scholarly article from the journal \"Sustainability.\" The title of the article is \"Moving Consumers along the Innovation Adoption Curve: A New Approach to Accelerate the Shift toward a More Sustainable Diet.\" The authors of the article are Antje Gonera, Erik Svanes, Annechen Bahr Bugge, Malin Myrset Hatlebakk, Katja-Maria Prexl, and Oydis Ueland.\n\nThe abstract of the article discusses the issue of unsustainable food production and consumption contributing to greenhouse gas emissions and global warming. The study explores the consumption of plant-based diets as a more sustainable alternative by combining consumer science, nutrition and health research, sustainability research, and innovation. It involved a survey of 1785 consumers, allowing the characterization of different consumer segments to understand attitudes toward plant-based foods and meat reduction. The findings indicate that moving consumers along the innovation adoption curve with targeted interventions can reduce the environmental footprint of diets and improve dietary health.\n\nKeywords listed include: innovation adoption, personas, sustainable diet, plant-based food, consumer segments, nutrition, and environmental footprint. \n\nThe image also contains detailed publication information, including the journal's name (\"Sustainability\"), the citation for the article, and contact details for correspondence. There is also information about the article’s submission, acceptance, and publication dates. \n\nAt the bottom of the image, there is a note about the publisher's policies and a Creative Commons license statement.",
+  "model_name": "gpt-4o",
+  "input_tokens": 1120,
+  "output_tokens": 295,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image is a screenshot of a scholarly article from the journal \"Sustainability.\" The title of the article is \"Moving Consumers along the Innovation Adoption Curve: A New Approach to Accelerate the Shift toward a More Sustainable Diet.\" The authors of the article are Antje Gonera, Erik Svanes, Annechen Bahr Bugge, Malin Myrset Hatlebakk, Katja-Maria Prexl, and Oydis Ueland.\n\nThe abstract of the article discusses the issue of unsustainable food production and consumption contributing to greenhouse gas emissions and global warming. The study explores the consumption of plant-based diets as a more sustainable alternative by combining consumer science, nutrition and health research, sustainability research, and innovation. It involved a survey of 1785 consumers, allowing the characterization of different consumer segments to understand attitudes toward plant-based foods and meat reduction. The findings indicate that moving consumers along the innovation adoption curve with targeted interventions can reduce the environmental footprint of diets and improve dietary health.\n\nKeywords listed include: innovation adoption, personas, sustainable diet, plant-based food, consumer segments, nutrition, and environmental footprint. \n\nThe image also contains detailed publication information, including the journal's name (\"Sustainability\"), the citation for the article, and contact details for correspondence. There is also information about the article’s submission, acceptance, and publication dates. \n\nAt the bottom of the image, there is a note about the publisher's policies and a Creative Commons license statement.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:01:22 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:01:34 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.0098,
+  "latency": 12002.179861068726,
+  "response": "The image is a screenshot of an academic article titled \"Moving Consumers along the Innovation Adoption Curve: A New Approach to Accelerate the Shift toward a More Sustainable Diet.\" The article is published in the journal \"Sustainability\" by MDPI. The authors of the article are Antje Gonera, Erik Svanes, Annechen Bahr Bugge, Malin Myrset Hatlebakk, Katja-Maria Prexl, and Øydis Ueland.\n\nThe article discusses the unsustainable nature of current food production and consumption, which contributes to greenhouse gas emissions and global warming. It emphasizes the need for a more plant-based diet to achieve a sustainable food system. The study combines consumer science, nutrition and health, sustainability research, and innovation to develop a new approach to accelerate the shift toward a more sustainable diet. The research involved 1785 consumers and analyzed their eating habits and attitudes towards plant-based foods and meat reduction. The results indicate that moving consumers along the innovation adoption curve with targeted interventions can reduce the environmental footprint of people's diets and improve dietary health.\n\nThe article includes keywords such as innovation adoption, personas, sustainable diet, plant-based food, consumer segments, nutrition, and environmental footprint. It also provides information about the publication, including the citation, editors, received and accepted dates, and the publisher's note. The article is open access and distributed under the Creative Commons Attribution license.",
+  "model_name": "gpt-4o",
+  "input_tokens": 1120,
+  "output_tokens": 280,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image is a screenshot of an academic article titled \"Moving Consumers along the Innovation Adoption Curve: A New Approach to Accelerate the Shift toward a More Sustainable Diet.\" The article is published in the journal \"Sustainability\" by MDPI. The authors of the article are Antje Gonera, Erik Svanes, Annechen Bahr Bugge, Malin Myrset Hatlebakk, Katja-Maria Prexl, and Øydis Ueland.\n\nThe article discusses the unsustainable nature of current food production and consumption, which contributes to greenhouse gas emissions and global warming. It emphasizes the need for a more plant-based diet to achieve a sustainable food system. The study combines consumer science, nutrition and health, sustainability research, and innovation to develop a new approach to accelerate the shift toward a more sustainable diet. The research involved 1785 consumers and analyzed their eating habits and attitudes towards plant-based foods and meat reduction. The results indicate that moving consumers along the innovation adoption curve with targeted interventions can reduce the environmental footprint of people's diets and improve dietary health.\n\nThe article includes keywords such as innovation adoption, personas, sustainable diet, plant-based food, consumer segments, nutrition, and environmental footprint. It also provides information about the publication, including the citation, editors, received and accepted dates, and the publisher's note. The article is open access and distributed under the Creative Commons Attribution license.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:01:39 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:04:13 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:04:39 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:04:51 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.01142,
+  "latency": 12655.969858169556,
+  "response": "The image is a screenshot of an academic article titled \"Moving Consumers along the Innovation Adoption Curve: A New Approach to Accelerate the Shift toward a More Sustainable Diet.\" The article is published in the journal \"Sustainability\" by MDPI.\n\nKey details from the article include:\n\n- **Authors**: Antje Gonera, Erik Svanes, Annechen Bahr Bugge, Malin Myrset Hatlebakk, Katja-Maria Prexl, and Øydis Ueland.\n- **Affiliations**: The authors are affiliated with institutions such as Nofima AS, NORSUS, Consumption Research Norway (SIFO), and the Faculty of Health Science at Oslo Metropolitan University.\n- **Abstract**: The abstract discusses the unsustainability of current food production and consumption, the need for a more plant-based diet, and the study's approach to accelerating the shift toward a sustainable diet using innovation adoption theory. The study involved 1785 consumers and analyzed their eating habits and attitudes towards plant-based foods and meat reduction.\n- **Keywords**: Innovation adoption, personas, sustainable diet, plant-based food, consumer segments, nutrition, environmental footprint.\n- **Publication Details**: The article was received on March 3, 2021, accepted on April 13, 2021, and published on April 16, 2021.\n- **Publisher's Note**: MDPI states neutrality regarding jurisdictional claims in published maps and institutional affiliations.\n- **License**: The article is open access and distributed under the Creative Commons Attribution (CC BY) license.\n\nThe first section of the article, titled \"1. Introduction,\" discusses the significant impact of the food value chain on global environmental change, the contribution of food production to global climate change, and the importance of shifting to more sustainable food systems. It also mentions Norway's commitment to reducing greenhouse gas emissions and the role of consumers in this transition.",
+  "model_name": "gpt-4o",
+  "input_tokens": 1120,
+  "output_tokens": 388,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/png"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image is a screenshot of an academic article titled \"Moving Consumers along the Innovation Adoption Curve: A New Approach to Accelerate the Shift toward a More Sustainable Diet.\" The article is published in the journal \"Sustainability\" by MDPI.\n\nKey details from the article include:\n\n- **Authors**: Antje Gonera, Erik Svanes, Annechen Bahr Bugge, Malin Myrset Hatlebakk, Katja-Maria Prexl, and Øydis Ueland.\n- **Affiliations**: The authors are affiliated with institutions such as Nofima AS, NORSUS, Consumption Research Norway (SIFO), and the Faculty of Health Science at Oslo Metropolitan University.\n- **Abstract**: The abstract discusses the unsustainability of current food production and consumption, the need for a more plant-based diet, and the study's approach to accelerating the shift toward a sustainable diet using innovation adoption theory. The study involved 1785 consumers and analyzed their eating habits and attitudes towards plant-based foods and meat reduction.\n- **Keywords**: Innovation adoption, personas, sustainable diet, plant-based food, consumer segments, nutrition, environmental footprint.\n- **Publication Details**: The article was received on March 3, 2021, accepted on April 13, 2021, and published on April 16, 2021.\n- **Publisher's Note**: MDPI states neutrality regarding jurisdictional claims in published maps and institutional affiliations.\n- **License**: The article is open access and distributed under the Creative Commons Attribution (CC BY) license.\n\nThe first section of the article, titled \"1. Introduction,\" discusses the significant impact of the food value chain on global environmental change, the contribution of food production to global climate change, and the importance of shifting to more sustainable food systems. It also mentions Norway's commitment to reducing greenhouse gas emissions and the role of consumers in this transition.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:05:06 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "gpt-4o",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:05:11 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.004875,
+  "latency": 5100.373029708862,
+  "response": "The image shows a young foal lying on a grassy field. The foal has a garland of small pink flowers around its head and some flowers around its body. The text on the image reads, \"This actually is my first rodeo and I'm very scared.\" The overall tone of the image is cute and humorous.",
+  "model_name": "gpt-4o",
+  "input_tokens": 780,
+  "output_tokens": 65,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image shows a young foal lying on a grassy field. The foal has a garland of small pink flowers around its head and some flowers around its body. The text on the image reads, \"This actually is my first rodeo and I'm very scared.\" The overall tone of the image is cute and humorous.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:37:47 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:37:50 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00039475,
+  "latency": 2192.1398639678955,
+  "response": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 1244,
+  "output_tokens": 67,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:51:39 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:52:06 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:52:08 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00039475,
+  "latency": 2393.573045730591,
+  "response": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 1244,
+  "output_tokens": 67,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:56:20 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 12:56:22 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00039475,
+  "latency": 2105.463981628418,
+  "response": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 1244,
+  "output_tokens": 67,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What do you see in the image?",
+        "images": [
+          {
+            "mime_type": "image/jpeg"
+          }
+        ]
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "The image shows a young horse or foal lying in a grassy field surrounded by pink flowers. The text overlaid on the image says \"This actually is my first rodeo and I'm very scared\", suggesting this is the horse's first rodeo event and it is feeling nervous or apprehensive about it.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:00:29 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:00:30 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00009499999999999999,
+  "latency": 1289.6430492401123,
+  "response": "Unfortunately, I don't have up-to-date information on the current temperature in New York. The weather can change frequently, so the temperature in New York can vary throughout the day. The best way to get the current temperature for a specific location is to check an online weather report or app that provides real-time weather data for that area.",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 15,
+  "output_tokens": 73,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    },
+    {
+      "role": "assistant",
+      "message": {
+        "text": "Unfortunately, I don't have up-to-date information on the current temperature in New York. The weather can change frequently, so the temperature in New York can vary throughout the day. The best way to get the current temperature for a specific location is to check an online weather report or app that provides real-time weather data for that area.",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:00:48 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:02:26 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:02:53 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00017075,
+  "latency": 26994.43793296814,
+  "response": "",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 348,
+  "output_tokens": 67,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    },
+    {
+      "role": "tool_request",
+      "message": {
+        "request_id": "toolu_01CiKcdshmWXovXUSHoWn4rX",
+        "tool_name": "get_weather",
+        "tool_input": {
+          "location": "New York"
+        }
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:03:16 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:03:17 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00017075,
+  "latency": 1217.4060344696045,
+  "response": "",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 348,
+  "output_tokens": 67,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    },
+    {
+      "role": "tool_request",
+      "message": {
+        "request_id": "toolu_01X6Azdgt1AhvyXVMKUW1Fvf",
+        "tool_name": "get_weather",
+        "tool_input": {
+          "location": "New York"
+        }
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 13:28:42 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 14:54:01 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 14:54:58 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 14:57:07 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 14:57:48 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 14:57:49 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.000154,
+  "latency": 1285.1848602294922,
+  "response": "",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 346,
+  "output_tokens": 54,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    },
+    {
+      "role": "tool_request",
+      "message": {
+        "request_id": "toolu_012rtUsJC1ejTrqDcgzETfkA",
+        "tool_name": "get_weather",
+        "tool_input": {
+          "location": "New York"
+        }
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 15:03:51 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 15:03:53 langcraft INFO:
+ChatResult:
+{
+  "success": true,
+  "error_message": null,
+  "cost": 0.00015424999999999998,
+  "latency": 1409.637212753296,
+  "response": "",
+  "model_name": "claude-3-haiku-20240307",
+  "input_tokens": 347,
+  "output_tokens": 54,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    },
+    {
+      "role": "tool_request",
+      "message": {
+        "request_id": "toolu_01WYTo7XTz7hdfGvqaDi8cxv",
+        "tool_name": "get_weather",
+        "tool_input": {
+          "location": "New York"
+        }
+      }
+    }
+  ]
+}
+============================================================
+
+============================================================
+2024-06-03 15:05:31 langcraft INFO:
+ChatBrief:
+{
+  "model_name": "claude-3-haiku-20240307",
+  "system": null,
+  "tools": [
+    "get_weather"
+  ],
+  "max_tokens": 4096,
+  "temperature": 0.0,
+  "stop": null,
+  "conversation": [
+    {
+      "role": "user",
+      "message": {
+        "text": "What is the temperature in New York?",
+        "images": []
+      }
+    }
+  ]
+}
+============================================================
+
