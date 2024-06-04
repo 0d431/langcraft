@@ -14,16 +14,6 @@ Module for defining the base classes for language actions.
 
 
 #################################################
-class MessageRole(Enum):
-    """
-    Enum for the role of the party uttering a message in a chat.
-    """
-
-    USER = "user"
-    ASSISTANT = "assistant"
-
-
-#################################################
 class Image(BaseModel):
     """
     Represents an image in a message.
@@ -62,12 +52,23 @@ class Image(BaseModel):
 
 
 #################################################
+class MessageRole(Enum):
+    """
+    Enum for the role of the party uttering a message in a chat.
+    """
+
+    USER = "user"
+    ASSISTANT = "assistant"
+
+
+#################################################
 class Message(BaseModel):
     """
     Represents a message with text and images.
     """
 
     text: str = Field(description="The text part of the message.")
+
     images: Optional[List[Image]] = Field(
         description="The images in the message.",
         default=None,
@@ -81,11 +82,20 @@ class ToolRequest(BaseModel):
     """
 
     request_id: str = Field(description="The ID of the request.")
+
     tool_name: str = Field(description="The name of the tool.")
-    tool_input: object = Field(description="The brief for the tool.")
+
+    # actually an ActionBrief, but Pydantic won't have it
+    tool_arguments: object = Field(description="The input arguments for the tool.")
 
     def run_tool(self) -> ActionResult:
-        return Actions.get(self.tool_name).action().run(self.tool_input)
+        """
+        Executes the specified tool with the given arguments.
+
+        Returns:
+            An instance of ActionResult representing the result of the tool execution.
+        """
+        return Actions.get(self.tool_name).action().run(self.tool_arguments)
 
 
 #################################################
@@ -95,7 +105,10 @@ class ToolResponse(BaseModel):
     """
 
     request_id: str = Field(description="The ID of the request.")
+
     tool_name: str = Field(description="The name of the tool.")
+
+    # actually an ActionResult, but Pydantic won't have it
     tool_result: object = Field(description="The result of the tool execution.")
 
 
@@ -105,7 +118,8 @@ class ConversationTurn(BaseModel):
     Represents a single turn in a conversation.
     """
 
-    role: MessageRole = Field(description="The role of the message.")
+    role: MessageRole = Field(description="The role uttering the message.")
+
     message: Optional[Message] = Field(
         description="The content of the respective party's message.", default=None
     )
@@ -118,10 +132,13 @@ class UserConversationTurn(ConversationTurn):
     """
 
     role: MessageRole = Field(
-        description="The role of the message.", default=MessageRole.USER, frozen=True
+        description="The role uttering the message.",
+        default=MessageRole.USER,
+        frozen=True,
     )
+
     tool_results: List[ToolResponse] = Field(
-        description="The tool responses; only if this is a user turn.", default=None
+        description="The tool responses, if any.", default=None
     )
 
 
@@ -132,16 +149,20 @@ class AssistantConversationTurn(ConversationTurn):
     """
 
     role: MessageRole = Field(
-        description="The role of the message.",
+        description="The role uttering the message.",
         default=MessageRole.ASSISTANT,
         frozen=True,
     )
+
     tool_requests: List[ToolRequest] = Field(
-        description="The tool requests; only if this is an assistant turn.",
+        description="The tool requests, if any.",
         default=None,
     )
 
     def run_tools(self):
+        """
+        Runs the tools requested by iterating over the tool_requests list and calling the run_tool method for each tool_request.
+        """
         for tool_request in self.tool_requests:
             tool_request.run_tool()
 
@@ -173,6 +194,7 @@ class LanguageActionBrief(ActionBrief):
     stop: Optional[str] = Field(description="The stop sequence.", default=None)
 
     class Config:
+        # to prevent complaints about the model_name field
         protected_namespaces = ()
 
 
@@ -193,11 +215,15 @@ class ConversationBrief(LanguageActionBrief):
     A brief for a chat language action.
     """
 
-    conversation: List = Field(
-        description="The conversation history."
-    )
+    conversation: List = Field(description="The conversation so far.")
 
     def has_pending_tool_calls(self):
+        """
+        Checks if there are any pending tool calls in the last conversation turn.
+
+        Returns:
+            bool: True if there are pending tool calls, False otherwise.
+        """
         return (
             len(self.conversation) > 0
             and self.conversation[-1].role == MessageRole.ASSISTANT
@@ -206,6 +232,13 @@ class ConversationBrief(LanguageActionBrief):
         )
 
     def extend_conversation(self, turn: ConversationTurn, run_tools: bool = True):
+        """
+        Extends the conversation by appending a new turn and optionally running any pending tool calls.
+
+        Args:
+            turn (ConversationTurn): The turn to be added to the conversation.
+            run_tools (bool, optional): Whether to run any pending tool calls. Defaults to True.
+        """
         self.conversation.append(turn)
 
         if self.has_pending_tool_calls() and run_tools:
@@ -229,18 +262,25 @@ class CompletionResult(ActionResult):
     Represents the result of a completion action.
     """
 
-    model_name: str = Field(description="The name of the LLM used for completion.")
+    model_name: str = Field(
+        description="The name of the LLM model used for completion."
+    )
+
     input_tokens: Optional[int] = Field(
         description="The number of tokens in the input prompt.", default=None
     )
+
     output_tokens: Optional[int] = Field(
         description="The number of tokens in the output completion.", default=None
     )
 
-    class Config:
-        protected_namespaces = ()
+    conversation_turn: object = Field(
+        description="The response turn in the conversation."
+    )
 
-    conversation_turn: object = Field(description="The response turn in the conversation.")
+    class Config:
+        # to prevent complaints about the model_name field
+        protected_namespaces = ()
 
 
 #################################################
@@ -260,11 +300,19 @@ class LanguageAction(Action):
             ValueError: If an invalid brief type is encountered.
         """
         # get the model and max_tokens settings
+        model_name = None
         for brief in briefs:
             if isinstance(brief, LanguageActionBrief):
-                brief.model_name = LLMs.get_model_name(brief.model_name)
+                brief.model_name = LLMs.resolve_model(brief.model_name)
 
-                if LLMs.get_model(brief.model_name) is None:
+                if not model_name:
+                    model_name = brief.model_name
+                elif model_name != brief.model_name:
+                    raise ValueError(
+                        f"Model mismatch in batch: {model_name} != {brief.model_name}"
+                    )
+
+                if LLMs.resolve_model(brief.model_name) is None:
                     raise ValueError(f"Model not found: {brief.model_name}")
 
                 if not brief.max_tokens:
@@ -298,10 +346,12 @@ class LanguageAction(Action):
             )
             result.cost = input_token_cost + output_token_cost
 
-            # log requresultest
+            # log result
             logging.getLogger("langcraft").info(
                 result.__class__.__name__ + ":\n" + result.model_dump_json(indent=2)
             )
+
+        super()._postprocess(results)
 
 
 #################################################
@@ -314,12 +364,13 @@ class ChatAction(LanguageAction):
     def get_descriptor(cls) -> ActionDescriptor:
         return ActionDescriptor(
             name="llm-chat",
-            description="Generates a completion for a chat conversation, using an LLM.",
+            description="Generates a completion for a conversation, using an LLM.",
             brief=ConversationBrief,
             action=cls,
             result=CompletionResult,
         )
 
+    # dictionary of model name matchers to implementations
     _chat_action_implementations: Dict[str, LanguageAction] = {}
 
     @classmethod
@@ -341,7 +392,7 @@ class ChatAction(LanguageAction):
         for model_name_matcher in model_name_matchers:
             if model_name_matcher in cls._chat_action_implementations:
                 raise ValueError(
-                    f"Model matcher for ChatAction already registered: {model_name_matcher}"
+                    f"Model matcher already registered: {model_name_matcher}"
                 )
 
             cls._chat_action_implementations[model_name_matcher] = implementation
@@ -379,8 +430,8 @@ class ChatAction(LanguageAction):
         Returns:
             ActionResult: The result of executing the action.
         """
-        model_name = brief.model_name
-        implementation = ChatAction._get_implementation(model_name)
+        implementation = ChatAction._get_implementation(brief.model_name)
+
         return implementation().run(brief)
 
     def run_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
@@ -393,8 +444,8 @@ class ChatAction(LanguageAction):
         Returns:
             List[ActionResult]: A list of action results.
         """
-        model_name = briefs[0].model_name
-        implementation = ChatAction._get_implementation(model_name)
+        implementation = ChatAction._get_implementation(briefs[0].model_name)
+
         return implementation().run_batch(briefs)
 
 

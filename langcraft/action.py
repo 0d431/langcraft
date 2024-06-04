@@ -1,5 +1,6 @@
 from typing import Type, List, Optional, Any, Union, Dict
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
+import inspect
 import time
 import concurrent.futures
 
@@ -61,7 +62,7 @@ class ActionBrief(BaseModel):
 
             schema["properties"][field_name] = field_schema
 
-            if field_info.is_required and not is_optional(field_info.annotation):
+            if field_info.is_required():
                 schema["required"].append(field_name)
 
         return schema
@@ -78,10 +79,13 @@ class ActionResult(BaseModel):
     success: bool = Field(
         description="True if the action was successful, False otherwise.", default=True
     )
+
     error_message: Optional[str] = Field(
         description="The error message if the action failed.", default=None
     )
-    cost: Optional[float] = Field(description="The cost in USD.", default=None)
+
+    cost: Optional[float] = Field(description="The cost in USD.", default=0.0)
+
     latency: Optional[float] = Field(
         description="The execution time in milliseconds.", default=None
     )
@@ -108,6 +112,18 @@ class Action:
         self.max_batch_size = max_batch_size
         self.thread_pool_size = thread_pool_size
 
+    def _preprocess(self, _briefs: List[ActionBrief]):
+        """
+        Called on a brief before running it to perform any necessary preprocessing.
+        """
+        pass
+
+    def _postprocess(self, _results: List[ActionResult]):
+        """
+        Called on a result after running it to perform any necessary postprocessing.
+        """
+        pass
+
     def run(self, _brief: ActionBrief) -> ActionResult:
         """
         Executes the action.
@@ -125,6 +141,36 @@ class Action:
         self._postprocess(results)
 
         return results[0]
+
+    def _wrap_run_one(self, brief: ActionBrief) -> ActionResult:
+        """
+        Runs a single action based on the provided ActionBrief and times execution.
+        """
+        start = time.time()
+
+        try:
+            result = self._run_one(brief)
+        except Exception as e:
+            result = ActionResult(
+                success=False,
+                error_message=str(e),
+            )
+
+        result.latency = (time.time() - start) * 1000
+
+        return result
+
+    def _run_one(self, brief: ActionBrief) -> ActionResult:
+        """
+        Runs a batch of up to max_batch_size actions.
+
+        Args:
+            briefs (List[ActionBrief]): A list of action briefs.
+
+        Returns:
+            List[ActionResult]: A list of action results.
+        """
+        return self._run_one_batch([brief])[0]
 
     def run_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
         """
@@ -144,63 +190,38 @@ class Action:
             for i in range(0, len(briefs), self.max_batch_size)
         ]
 
-        # if just one batch, run it
+        # run batch(es)
         if len(batches) == 1:
-            return self._wrap_run_one_batch(batches[0])
+            results = self._wrap_run_one_batch(batches[0])
+        else:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=self.thread_pool_size
+            ) as executor:
+                results = list(executor.map(self._wrap_run_one_batch, batches))
 
-        # more than one batch, run them in parallel
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.thread_pool_size
-        ) as executor:
-            results = list(executor.map(self._wrap_run_one_batch, batches))
-
-        # flatten the list of lists
-        results = [result for batch in results for result in batch]
+            results = [result for batch in results for result in batch]
 
         self._postprocess(results)
 
         return results
-
-    def _preprocess(self, _briefs: List[ActionBrief]):
-        """
-        Called on a brief before running it to perform any necessary preprocessing.
-        """
-        pass
-
-    def _postprocess(self, _results: List[ActionResult]):
-        """
-        Called on a result after running it to perform any necessary postprocessing.
-        """
-        pass
-
-    def _wrap_run_one(self, brief: ActionBrief) -> ActionResult:
-        """
-        Runs a single action based on the provided ActionBrief and times execution.
-        """
-        start = time.time()
-        result = self._run_one(brief)
-        result.latency = (time.time() - start) * 1000
-
-        return result
-
-    def _run_one(self, brief: ActionBrief) -> ActionResult:
-        """
-        Runs a batch of up to max_batch_size actions.
-
-        Args:
-            briefs (List[ActionBrief]): A list of action briefs.
-
-        Returns:
-            List[ActionResult]: A list of action results.
-        """
-        return self._run_one_batch([brief])[0]
 
     def _wrap_run_one_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
         """
         Runs a batch of actions based on the provided ActionBriefs and times execution.
         """
         start = time.time()
-        results = self._run_one_batch(briefs)
+
+        try:
+            results = self._run_one_batch(briefs)
+        except Exception as e:
+            results = [
+                ActionResult(
+                    success=False,
+                    error_message=str(e),
+                )
+                for _ in briefs
+            ]
+
         for result in results:
             result.latency = (time.time() - start) * 1000
 
@@ -222,31 +243,42 @@ class Action:
 #################################################
 class ActionDescriptor(BaseModel):
     """
-    Providing information about the action.
+    Describes an the action.
     """
 
     name: str = Field(description="The name of the action.")
+
     description: str = Field(description="The description of the action.")
+
     brief: Type[ActionBrief] = Field(description="The brief class for the action.")
+
     action: Type[Action] = Field(
         description="The action class implementing the action."
     )
+
     result: Type[ActionResult] = Field(description="The result class for the action.")
 
 
 #################################################
 class Actions:
     """
-    Index for known action descriptors.
+    Index for known actions.
     """
 
     _action_descriptors: Dict[str, ActionDescriptor] = {}
 
     @classmethod
-    def register(
-        cls,
-        action_descriptor: ActionDescriptor,
-    ):
+    def register(cls, action_descriptor: ActionDescriptor):
+        """
+        Register a new action descriptor.
+
+        Args:
+            cls (class): The class to register the action descriptor for.
+            action_descriptor (ActionDescriptor): The action descriptor to register.
+
+        Raises:
+            ValueError: If the action descriptor is already registered.
+        """
         name = action_descriptor.name
 
         if name in cls._action_descriptors:
@@ -280,3 +312,89 @@ class Actions:
             ActionBrief: The created action brief.
         """
         return Actions.get(name).brief(**parameters)
+
+    @classmethod
+    def generate_action(cls, func: Any) -> ActionDescriptor:
+        """
+        Generate an Action class dynamically based on the provided function.
+
+        Args:
+            cls (Type[Action]): The base class for the generated Action class.
+            func (Any): The function to generate the Action class from.
+
+        Returns:
+            ActionDescriptor: The action descriptor for the generated Action class.
+        """
+        # get parameters from the function signature
+        parameters = inspect.signature(func).parameters
+
+        # extract descriptions from the docstring
+        descriptions = {}
+        doc_lines = func.__doc__
+        if "Args:" in doc_lines:
+            doc_lines = doc_lines.split("Args:")[1].split("\n")
+            for param in parameters.values():
+                if param.name != "return":
+                    for line in doc_lines:
+                        if line.strip().startswith(param.name):
+                            descriptions[param.name] = line.split(":")[1].strip()
+                            break
+
+        # create fields for the Pydantic model considering optional parameters with defaults
+        fields = {
+            param.name: Field(
+                default=(
+                    param.default
+                    if param.default is not inspect.Parameter.empty
+                    else ...
+                ),
+                description=descriptions.get(param.name, ""),
+            )
+            for param in parameters.values()
+            if param.name != "return"
+        }
+
+        # create the brief class dynamically
+        brief_class_name = "DynamicBrief"
+        brief_fields = {
+            param_name: (
+                param.annotation,
+                Field(
+                    description=fields[param_name].description,
+                    default=fields[param_name].default,
+                ),
+            )
+            for param_name, param in parameters.items()
+        }
+
+        BriefClass = create_model(
+            brief_class_name, **brief_fields, __base__=ActionBrief
+        )
+
+        # define a dynamic action class
+        class DynamicAction(Action):
+            NAME = func.__name__
+
+            @classmethod
+            def get_descriptor(cls) -> ActionDescriptor:
+                return ActionDescriptor(
+                    name=cls.NAME,
+                    description="\n".join(doc_lines)
+                    .split("Args:")[0]
+                    .replace("\n", " ")
+                    .replace("\t", " ")
+                    .strip(),
+                    brief=BriefClass,
+                    action=cls,
+                    result=ActionResult,
+                )
+
+            def _run_one(self, brief: Any) -> ActionResult:
+                func_args = {field: getattr(brief, field) for field in fields}
+                return ActionResult(result=func(**func_args))
+
+        # register action descriptor
+        action_descriptor = DynamicAction.get_descriptor()
+        Actions.register(action_descriptor)
+
+        return action_descriptor

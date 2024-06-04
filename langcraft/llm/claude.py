@@ -129,7 +129,7 @@ class ClaudeChatAction(LanguageAction):
                     ToolRequest(
                         request_id=response_element.id,
                         tool_name=response_element.name,
-                        tool_input=Actions.create_brief(
+                        tool_arguments=Actions.create_brief(
                             response_element.name, response_element.input
                         ),
                     )
@@ -143,7 +143,7 @@ class ClaudeChatAction(LanguageAction):
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            result=text_response or "<tool call>",
+            result=text_response or "",
             conversation_turn=turn,
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,

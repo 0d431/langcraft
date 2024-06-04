@@ -3,6 +3,10 @@ import logging
 import datetime
 
 
+"""
+This module contains the logging configuration for the langcraft module.
+"""
+
 ##############################################
 def _create_logger():
     """

@@ -136,12 +136,11 @@ class GeminiChatAction(LanguageAction):
                         ToolRequest(
                             request_id=tool_call.name,
                             tool_name=tool_call.name,
-                            tool_input=Actions.create_brief(
+                            tool_arguments=Actions.create_brief(
                                 tool_call.name, tool_call.args
                             ),
                         )
                     )
-
             else:
                 text_response = response_element.text.strip(" \n")
 
@@ -153,7 +152,7 @@ class GeminiChatAction(LanguageAction):
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            result=text_response or "<tool call>",
+            result=text_response or "",
             conversation_turn=turn,
             input_tokens=response.usage_metadata.prompt_token_count,
             output_tokens=response.usage_metadata.candidates_token_count,

@@ -4,7 +4,6 @@ import json
 import httpx
 import openai
 import logging
-from langcraft.action import ActionDescriptor
 from langcraft.llm.llm_action import (
     LanguageAction,
     ConversationBrief,
@@ -12,7 +11,6 @@ from langcraft.llm.llm_action import (
     ChatAction,
     Message,
     MessageRole,
-    ConversationTurn,
     AssistantConversationTurn,
     ToolRequest,
     Actions,
@@ -161,7 +159,7 @@ class GPTChatAction(LanguageAction):
                         ToolRequest(
                             request_id=tool_call.id,
                             tool_name=tool_call.function.name,
-                            tool_input=Actions.create_brief(
+                            tool_arguments=Actions.create_brief(
                                 tool_call.function.name,
                                 json.loads(tool_call.function.arguments),
                             ),
@@ -176,7 +174,7 @@ class GPTChatAction(LanguageAction):
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            result=text_response or "<tool call>",
+            result=text_response or "",
             conversation_turn=turn,
             input_tokens=response.usage.prompt_tokens,
             output_tokens=response.usage.completion_tokens,
