@@ -1,7 +1,12 @@
 import os
-from typing import List, Dict
+from typing import List, Dict, Any
 import vertexai
-from vertexai.generative_models._generative_models import Part, Content
+from vertexai.generative_models._generative_models import (
+    Part,
+    Content,
+    gapic_content_types,
+    gapic_tool_types,
+)
 from vertexai.preview.generative_models import (
     GenerativeModel,
     GenerationConfig,
@@ -9,14 +14,14 @@ from vertexai.preview.generative_models import (
     Tool,
 )
 from langcraft.llm.llm_action import (
-    LanguageAction,
-    ConversationBrief,
+    LLMAction,
+    CompletionBrief,
     CompletionResult,
-    ChatAction,
+    CompletionAction,
     Message,
     MessageRole,
     AssistantConversationTurn,
-    ToolRequest,
+    ToolCallRequest,
     Actions,
 )
 
@@ -42,7 +47,7 @@ class VertexClient:
 
 
 #################################################
-class GeminiChatAction(LanguageAction):
+class GeminiChatAction(LLMAction):
     """
     A chat action that uses Gemini to generate chats.
     """
@@ -73,7 +78,7 @@ class GeminiChatAction(LanguageAction):
             )
         ]
 
-    def _run_one(self, brief: ConversationBrief) -> CompletionResult:
+    def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
         Executes the Chat action.
 
@@ -95,20 +100,53 @@ class GeminiChatAction(LanguageAction):
         messages = []
 
         for turn in brief.conversation:
-            parts = []
-            for image in turn.message.images or []:
-                parts.append(
-                    Part.from_data(data=image.image_data, mime_type=image.mime_type)
-                )
+            if turn.message:
+                parts = []
+                for image in turn.message.images or []:
+                    parts.append(
+                        Part.from_data(data=image.image_data, mime_type=image.mime_type)
+                    )
 
-            if turn.message.text:
-                parts.append(Part.from_text(turn.message.text))
+                if turn.message.text:
+                    parts.append(Part.from_text(turn.message.text))
 
-            content = Content(
-                parts=parts, role="user" if turn.role == MessageRole.USER else "model"
-            )
+                if len(parts) > 0:
+                    messages.append(
+                        Content(
+                            parts=parts,
+                            role="user" if turn.role == MessageRole.USER else "model",
+                        )
+                    )
 
-            messages.append(content)
+            if turn.role == MessageRole.ASSISTANT:
+                for tool_call_request in turn.tool_call_requests or []:
+                    messages.append(
+                        Content(
+                            parts=[
+                                Part._from_gapic(
+                                    raw_part=gapic_content_types.Part(
+                                        function_call=gapic_tool_types.FunctionCall(
+                                            name=tool_call_request.tool_name,
+                                            args=tool_call_request.tool_arguments.dict(),
+                                        )
+                                    )
+                                )
+                            ],
+                            role="model",
+                        )
+                    )
+            elif turn.role == MessageRole.USER:
+                for tool_call_result in turn.tool_call_results or []:
+                    messages.append(
+                        Content(
+                            parts=[
+                                Part.from_function_response(
+                                    name=tool_call_result.tool_name,
+                                    response={"content": tool_call_result.tool_result},
+                                )
+                            ]
+                        )
+                    )
 
         # set up params
         generation_config = GenerationConfig(
@@ -127,17 +165,17 @@ class GeminiChatAction(LanguageAction):
 
         # parse response
         text_response = None
-        tool_requests = []
+        tool_call_requests = []
 
         for response_element in response.candidates:
             if response_element.function_calls:
-                for tool_call in response_element.function_calls:
-                    tool_requests.append(
-                        ToolRequest(
-                            request_id=tool_call.name,
-                            tool_name=tool_call.name,
+                for tool_call_request in response_element.function_calls:
+                    tool_call_requests.append(
+                        ToolCallRequest(
+                            request_id=tool_call_request.name,
+                            tool_name=tool_call_request.name,
                             tool_arguments=Actions.create_brief(
-                                tool_call.name, tool_call.args
+                                tool_call_request.name, tool_call_request.args
                             ),
                         )
                     )
@@ -146,7 +184,7 @@ class GeminiChatAction(LanguageAction):
 
         turn = AssistantConversationTurn(
             message=Message(text=text_response) if text_response else None,
-            tool_requests=tool_requests,
+            tool_call_requests=tool_call_requests if len(tool_call_requests) > 0 else None,
         )
 
         # return result
@@ -160,4 +198,4 @@ class GeminiChatAction(LanguageAction):
 
 
 #################################################
-ChatAction.register_implementation(["gemini*"], GeminiChatAction)
+CompletionAction.register_implementation(["gemini*"], GeminiChatAction)

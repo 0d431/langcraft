@@ -5,14 +5,14 @@ import httpx
 import openai
 import logging
 from langcraft.llm.llm_action import (
-    LanguageAction,
-    ConversationBrief,
+    LLMAction,
+    CompletionBrief,
     CompletionResult,
-    ChatAction,
+    CompletionAction,
     Message,
     MessageRole,
     AssistantConversationTurn,
-    ToolRequest,
+    ToolCallRequest,
     Actions,
 )
 
@@ -63,7 +63,7 @@ class OpenAIClient:
 
 
 #################################################
-class GPTChatAction(LanguageAction):
+class GPTChatAction(LLMAction):
     """
     A chat action that uses GPT to generate chats.
     """
@@ -93,7 +93,7 @@ class GPTChatAction(LanguageAction):
             )
         ]
 
-    def _run_one(self, brief: ConversationBrief) -> CompletionResult:
+    def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
         Executes the Chat action.
 
@@ -116,23 +116,59 @@ class GPTChatAction(LanguageAction):
 
         for turn in brief.conversation:
             content = []
-            for image in turn.message.images or []:
-                content.append(
+
+            if turn.message:
+                for image in turn.message.images or []:
+                    content.append(
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{image.mime_type};base64,{image.image_data}"
+                            },
+                        }
+                    )
+                content.append({"type": "text", "text": turn.message.text})
+
+            if turn.role == MessageRole.ASSISTANT:
+                tool_call_requests = []
+                for tool_call_request in turn.tool_call_requests or []:
+                    tool_call_requests.append(
+                        {
+                            "id": tool_call_request.request_id,
+                            "type": "function",
+                            "function": {
+                                "name": tool_call_request.tool_name,
+                                "arguments": json.dumps(
+                                    tool_call_request.tool_arguments.dict()
+                                ),
+                            },
+                        }
+                    )
+
+                messages.append(
                     {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:{image.mime_type};base64,{image.image_data}"
-                        },
+                        "role": "assistant",
+                        "content": content,
+                        "tool_calls": tool_call_requests,
                     }
                 )
-            content.append({"type": "text", "text": turn.message.text})
+            elif turn.role == MessageRole.USER:
+                if len(content) > 0:
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": content,
+                        }
+                    )
 
-            messages.append(
-                {
-                    "role": "user" if turn.role == MessageRole.USER else "assistant",
-                    "content": content,
-                }
-            )
+                for tool_call_result in turn.tool_call_results or []:
+                    messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_call_result.request_id,
+                            "content": tool_call_result.tool_result,
+                        }
+                    )
 
         # obtain completion
         client = OpenAIClient.get()
@@ -148,27 +184,26 @@ class GPTChatAction(LanguageAction):
 
         # parse response
         text_response = None
-        tool_requests = []
+        tool_call_requests = []
 
         for response_element in response.choices:
             if response_element.message.content:
                 text_response = response_element.message.content.strip(" \n")
-            if response_element.message.tool_calls is not None:
-                for tool_call in response_element.message.tool_calls:
-                    tool_requests.append(
-                        ToolRequest(
-                            request_id=tool_call.id,
-                            tool_name=tool_call.function.name,
-                            tool_arguments=Actions.create_brief(
-                                tool_call.function.name,
-                                json.loads(tool_call.function.arguments),
-                            ),
-                        )
+            for tool_call_request in response_element.message.tool_calls or []:
+                tool_call_requests.append(
+                    ToolCallRequest(
+                        request_id=tool_call_request.id,
+                        tool_name=tool_call_request.function.name,
+                        tool_arguments=Actions.create_brief(
+                            tool_call_request.function.name,
+                            json.loads(tool_call_request.function.arguments),
+                        ),
                     )
+                )
 
         turn = AssistantConversationTurn(
             message=Message(text=text_response) if text_response else None,
-            tool_requests=tool_requests,
+            tool_call_requests=tool_call_requests if len(tool_call_requests) > 0 else None,
         )
 
         # return result
@@ -182,4 +217,4 @@ class GPTChatAction(LanguageAction):
 
 
 #################################################
-ChatAction.register_implementation(["gpt*"], GPTChatAction)
+CompletionAction.register_implementation(["gpt*"], GPTChatAction)

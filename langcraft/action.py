@@ -74,8 +74,6 @@ class ActionResult(BaseModel):
     Base class for action results, providing the output of an action.
     """
 
-    result: str = Field(description="The string representation of the action result.")
-
     success: bool = Field(
         description="True if the action was successful, False otherwise.", default=True
     )
@@ -371,6 +369,24 @@ class Actions:
             brief_class_name, **brief_fields, __base__=ActionBrief
         )
 
+        # create a result class dynamically
+        result_class_name = "DynamicResult"
+        return_annotation = inspect.signature(func).return_annotation
+        result_fields = {
+            "result": (
+                (
+                    str
+                    if return_annotation == inspect.Signature.empty
+                    else return_annotation
+                ),
+                Field(description=f"The result of {func.__name__}()."),
+            ),
+        }
+
+        ResultClass = create_model(
+            result_class_name, **result_fields, __base__=ActionResult
+        )
+
         # define a dynamic action class
         class DynamicAction(Action):
             NAME = func.__name__
@@ -386,12 +402,12 @@ class Actions:
                     .strip(),
                     brief=BriefClass,
                     action=cls,
-                    result=ActionResult,
+                    result=ResultClass,
                 )
 
             def _run_one(self, brief: Any) -> ActionResult:
                 func_args = {field: getattr(brief, field) for field in fields}
-                return ActionResult(result=func(**func_args))
+                return ResultClass(result=func(**func_args))
 
         # register action descriptor
         action_descriptor = DynamicAction.get_descriptor()

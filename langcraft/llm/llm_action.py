@@ -76,12 +76,12 @@ class Message(BaseModel):
 
 
 #################################################
-class ToolRequest(BaseModel):
+class ToolCallRequest(BaseModel):
     """
-    Represents a tool execution request.
+    Represents a tool call request.
     """
 
-    request_id: str = Field(description="The ID of the request.")
+    request_id: str = Field(description="The ID of the call request.")
 
     tool_name: str = Field(description="The name of the tool.")
 
@@ -99,9 +99,9 @@ class ToolRequest(BaseModel):
 
 
 #################################################
-class ToolResponse(BaseModel):
+class ToolCallResult(BaseModel):
     """
-    Represents a tool execution result.
+    Represents a tool call result.
     """
 
     request_id: str = Field(description="The ID of the request.")
@@ -137,7 +137,7 @@ class UserConversationTurn(ConversationTurn):
         frozen=True,
     )
 
-    tool_results: List[ToolResponse] = Field(
+    tool_call_results: Optional[List[ToolCallResult]] = Field(
         description="The tool responses, if any.", default=None
     )
 
@@ -154,8 +154,8 @@ class AssistantConversationTurn(ConversationTurn):
         frozen=True,
     )
 
-    tool_requests: List[ToolRequest] = Field(
-        description="The tool requests, if any.",
+    tool_call_requests: Optional[List[ToolCallRequest]] = Field(
+        description="The tool call requests, if any.",
         default=None,
     )
 
@@ -163,14 +163,14 @@ class AssistantConversationTurn(ConversationTurn):
         """
         Runs the tools requested by iterating over the tool_requests list and calling the run_tool method for each tool_request.
         """
-        for tool_request in self.tool_requests:
-            tool_request.run_tool()
+        for tool_call_request in self.tool_call_requests or []:
+            tool_call_request.run_tool()
 
 
 #################################################
-class LanguageActionBrief(ActionBrief):
+class CompletionBrief(ActionBrief):
     """
-    Base class for language action briefs.
+    Class for a completion brief.
     """
 
     model_name: Optional[str] = Field(
@@ -178,6 +178,8 @@ class LanguageActionBrief(ActionBrief):
     )
 
     system: Optional[str] = Field(description="The system prompt.", default=None)
+
+    conversation: List = Field(description="The conversation so far.")
 
     tools: List[str] = Field(
         description="The names of actions accessible as tools.", default=[]
@@ -197,26 +199,6 @@ class LanguageActionBrief(ActionBrief):
         # to prevent complaints about the model_name field
         protected_namespaces = ()
 
-
-#################################################
-class PromptBrief(LanguageActionBrief):
-    """
-    A brief for a completion language action.
-    """
-
-    prompt: Union[str, Message] = Field(
-        description="The prompt, either plain text or a structured message."
-    )
-
-
-#################################################
-class ConversationBrief(LanguageActionBrief):
-    """
-    A brief for a chat language action.
-    """
-
-    conversation: List = Field(description="The conversation so far.")
-
     def has_pending_tool_calls(self):
         """
         Checks if there are any pending tool calls in the last conversation turn.
@@ -227,33 +209,66 @@ class ConversationBrief(LanguageActionBrief):
         return (
             len(self.conversation) > 0
             and self.conversation[-1].role == MessageRole.ASSISTANT
-            and self.conversation[-1].tool_requests
-            and len(self.conversation[-1].tool_requests) > 0
+            and self.conversation[-1].tool_call_requests
+            and len(self.conversation[-1].tool_call_requests) > 0
         )
 
-    def extend_conversation(self, turn: ConversationTurn, run_tools: bool = True):
+    def extend_conversation(
+        self, turn: ConversationTurn, run_tools: bool = True
+    ) -> bool:
         """
         Extends the conversation by appending a new turn and optionally running any pending tool calls.
 
         Args:
             turn (ConversationTurn): The turn to be added to the conversation.
             run_tools (bool, optional): Whether to run any pending tool calls. Defaults to True.
+
+        Returns:
+            bool: True if tools were called.
         """
         self.conversation.append(turn)
 
         if self.has_pending_tool_calls() and run_tools:
             self.extend_conversation(
                 UserConversationTurn(
-                    tool_results=[
-                        ToolResponse(
-                            request_id=tool_request.request_id,
-                            tool_name=tool_request.tool_name,
-                            tool_result=tool_request.run_tool().result,
+                    tool_call_results=[
+                        ToolCallResult(
+                            request_id=tool_call_request.request_id,
+                            tool_name=tool_call_request.tool_name,
+                            tool_result=tool_call_request.run_tool().result,
                         )
-                        for tool_request in self.conversation[-1].tool_requests
+                        for tool_call_request in self.conversation[
+                            -1
+                        ].tool_call_requests
                     ]
                 )
             )
+
+            return True
+
+        return False
+
+    @classmethod
+    def from_prompt(cls, prompt: Union[str, Message], **kwargs):
+        """
+        Creates a ConversationBrief from a prompt.
+
+        Args:
+            prompt (Union[str,Message]): The prompt for the conversation.
+
+        Returns:
+            ConversationBrief: The generated ConversationBrief.
+        """
+        return cls(
+            conversation=[
+                UserConversationTurn(
+                    message=(
+                        prompt if isinstance(prompt, Message) else Message(text=prompt)
+                    )
+                )
+            ],
+            **kwargs,
+        )
 
 
 #################################################
@@ -284,98 +299,27 @@ class CompletionResult(ActionResult):
 
 
 #################################################
-class LanguageAction(Action):
+class CompletionAction(Action):
     """
-    Base for LLM actions.
-    """
-
-    def _preprocess(self, briefs: List[ActionBrief]):
-        """
-        Preprocesses the given list of action briefs to resolve the model name if needed.
-
-        Args:
-            briefs (List[ActionBrief]): The list of action briefs to be preprocessed.
-
-        Raises:
-            ValueError: If an invalid brief type is encountered.
-        """
-        # get the model and max_tokens settings
-        model_name = None
-        for brief in briefs:
-            if isinstance(brief, LanguageActionBrief):
-                brief.model_name = LLMs.resolve_model(brief.model_name)
-
-                if not model_name:
-                    model_name = brief.model_name
-                elif model_name != brief.model_name:
-                    raise ValueError(
-                        f"Model mismatch in batch: {model_name} != {brief.model_name}"
-                    )
-
-                if LLMs.resolve_model(brief.model_name) is None:
-                    raise ValueError(f"Model not found: {brief.model_name}")
-
-                if not brief.max_tokens:
-                    brief.max_tokens = LLMs.get_max_output_tokens(brief.model_name)
-            else:
-                raise ValueError(
-                    f"Invalid brief type: {type(brief)}; expected LanguageActionBrief."
-                )
-
-            # log request
-            logging.getLogger("langcraft").info(
-                brief.__class__.__name__ + ":\n" + brief.model_dump_json(indent=2)
-            )
-
-        super()._preprocess(briefs)
-
-    def _postprocess(self, results: List[ActionResult]):
-        """
-        Postprocesses the results by calculating the cost for each result.
-
-        Args:
-            results (List[ActionResult]): The list of results to be postprocessed.
-        """
-        # calculate the cost & log
-        for result in results:
-            input_token_cost = LLMs.get_prompt_cost(
-                result.model_name, result.input_tokens
-            )
-            output_token_cost = LLMs.get_completion_cost(
-                result.model_name, result.output_tokens
-            )
-            result.cost = input_token_cost + output_token_cost
-
-            # log result
-            logging.getLogger("langcraft").info(
-                result.__class__.__name__ + ":\n" + result.model_dump_json(indent=2)
-            )
-
-        super()._postprocess(results)
-
-
-#################################################
-class ChatAction(LanguageAction):
-    """
-    An action that delegates to an LLM to complete a prompt.
+    An action that delegates to an LLM to complete a conversation.
     """
 
     @classmethod
     def get_descriptor(cls) -> ActionDescriptor:
         return ActionDescriptor(
-            name="llm-chat",
+            name="llm-completion",
             description="Generates a completion for a conversation, using an LLM.",
-            brief=ConversationBrief,
+            brief=CompletionBrief,
             action=cls,
             result=CompletionResult,
         )
 
     # dictionary of model name matchers to implementations
-    _chat_action_implementations: Dict[str, LanguageAction] = {}
+    _chat_action_implementations: Dict[str, Action] = {}
 
     @classmethod
     def register_implementation(
-        cls, model_name_matchers: List[str], implementation: LanguageAction
+        cls, model_name_matchers: List[str], implementation: Action
     ):
         """
         Register an implementation for a given model name matcher.
@@ -430,9 +374,30 @@ class ChatAction(LanguageAction):
         Returns:
             ActionResult: The result of executing the action.
         """
-        implementation = ChatAction._get_implementation(brief.model_name)
+        implementation = CompletionAction._get_implementation(brief.model_name)
 
         return implementation().run(brief)
+
+    def run_with_tools(
+        self, brief: CompletionBrief, max_iterations=10
+    ) -> CompletionResult:
+        """
+        Run the language model with additional tools.
+
+        Args:
+            brief (CompletionBrief): The completion brief to be processed.
+            max_iterations (int, optional): The maximum number of iterations to extend the conversation. Defaults to 10.
+
+        Returns:
+            CompletionResult: The result of the completion process.
+        """
+
+        result = self.run(brief)
+
+        if brief.extend_conversation(result.conversation_turn, max_iterations > 0):
+            return self.run_with_tools(brief, max_iterations - 1)
+
+        return result
 
     def run_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
         """
@@ -444,85 +409,82 @@ class ChatAction(LanguageAction):
         Returns:
             List[ActionResult]: A list of action results.
         """
-        implementation = ChatAction._get_implementation(briefs[0].model_name)
+        implementation = CompletionAction._get_implementation(briefs[0].model_name)
 
         return implementation().run_batch(briefs)
 
 
 #################################################
-Actions.register(ChatAction.get_descriptor())
-
-
-#################################################
-class CompletionAction(LanguageAction):
-    """
-    An action that uses an LLM to complete a prompt.
-    """
-
-    @classmethod
-    def get_descriptor(cls) -> ActionDescriptor:
-        return ActionDescriptor(
-            name="llm-complete",
-            description="Generates a completion for a prompt, using an LLM.",
-            brief=PromptBrief,
-            action=cls,
-            result=CompletionResult,
-        )
-
-    def run(self, brief: ActionBrief) -> ActionResult:
-        """
-        Runs the action with the given ActionBrief, delegating to ChatAction.
-
-        Args:
-            brief (ActionBrief): The ActionBrief containing the necessary information for the action.
-
-        Returns:
-            ActionResult: The result of running the action.
-        """
-        return ChatAction().run(
-            ConversationBrief(
-                model_name=brief.model_name,
-                tools=brief.tools,
-                conversation=[
-                    UserConversationTurn(
-                        message=(
-                            brief.prompt
-                            if isinstance(brief.prompt, Message)
-                            else Message(text=brief.prompt)
-                        ),
-                    )
-                ],
-            )
-        )
-
-    def run_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
-        """
-        Runs the action with the given ActionBrief, delegating to ChatAction.
-
-        Args:
-            brief (ActionBrief): The ActionBrief containing the necessary information for the action.
-
-        Returns:
-            ActionResult: The result of running the action.
-        """
-        return ChatAction().run(
-            [
-                ConversationBrief(
-                    model_name=brief.model_name,
-                    conversation=[
-                        UserConversationTurn(
-                            message=(
-                                brief.prompt
-                                if isinstance(brief.prompt, Message)
-                                else Message(text=brief.prompt)
-                            ),
-                        )
-                    ],
-                )
-                for brief in briefs
-            ]
-        )
-
-
-#################################################
 Actions.register(CompletionAction.get_descriptor())
+
+
+#################################################
+class LLMAction(Action):
+    """
+    Base class for actions that use a language model.
+    """
+
+    def _preprocess(self, briefs: List[ActionBrief]):
+        """
+        Preprocesses the given list of action briefs to resolve the model name if needed.
+
+        Args:
+            briefs (List[ActionBrief]): The list of action briefs to be preprocessed.
+
+        Raises:
+            ValueError: If an invalid brief type is encountered.
+        """
+        # get the model and max_tokens settings
+        model_name = None
+        for brief in briefs:
+            if isinstance(brief, CompletionBrief):
+                brief.model_name = LLMs.resolve_model(brief.model_name)
+
+                if not model_name:
+                    model_name = brief.model_name
+                elif model_name != brief.model_name:
+                    raise ValueError(
+                        f"Model mismatch in batch: {model_name} != {brief.model_name}"
+                    )
+
+                if LLMs.resolve_model(brief.model_name) is None:
+                    raise ValueError(f"Model not found: {brief.model_name}")
+
+                if not brief.max_tokens:
+                    brief.max_tokens = LLMs.get_max_output_tokens(brief.model_name)
+            else:
+                raise ValueError(
+                    f"Invalid brief type: {type(brief)}; expected LanguageActionBrief."
+                )
+
+            # log request
+            logging.getLogger("langcraft").info(
+                brief.__class__.__name__ + ":\n" + brief.model_dump_json(indent=2)
+            )
+
+        super()._preprocess(briefs)
+
+    def _postprocess(self, results: List[ActionResult]):
+        """
+        Postprocesses the results by calculating the cost for each result.
+
+        Args:
+            results (List[ActionResult]): The list of results to be postprocessed.
+        """
+        # calculate the cost & log
+        for result in results:
+            if isinstance(result, CompletionResult):
+                input_token_cost = LLMs.get_prompt_cost(
+                    result.model_name, result.input_tokens
+                )
+                output_token_cost = LLMs.get_completion_cost(
+                    result.model_name, result.output_tokens
+                )
+                result.cost = input_token_cost + output_token_cost
+
+            # log result
+            logging.getLogger("langcraft").info(
+                result.__class__.__name__ + ":\n" + result.model_dump_json(indent=2)
+            )
+
+        super()._postprocess(results)

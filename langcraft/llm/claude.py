@@ -3,15 +3,15 @@ from typing import List, Dict
 import httpx
 import anthropic
 from langcraft.llm.llm_action import (
-    LanguageAction,
-    ConversationBrief,
-    ChatAction,
+    CompletionBrief,
+    CompletionAction,
     CompletionResult,
     Message,
     MessageRole,
     AssistantConversationTurn,
-    ToolRequest,
+    ToolCallRequest,
     Actions,
+    LLMAction
 )
 
 
@@ -44,7 +44,7 @@ class AnthropicClient:
 
 
 #################################################
-class ClaudeChatAction(LanguageAction):
+class ClaudeChatAction(LLMAction):
     """
     A chat action that uses Claude to generate chats.
     """
@@ -71,7 +71,7 @@ class ClaudeChatAction(LanguageAction):
             )
         ]
 
-    def _run_one(self, brief: ConversationBrief) -> CompletionResult:
+    def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
         Executes the Chat action.
 
@@ -85,18 +85,39 @@ class ClaudeChatAction(LanguageAction):
         messages = []
         for turn in brief.conversation:
             content = []
-            for image in turn.message.images or []:
-                content.append(
-                    {
-                        "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": image.mime_type,
-                            "data": image.image_data,
-                        },
-                    }
-                )
-            content.append({"type": "text", "text": turn.message.text})
+            if turn.message:
+                for image in turn.message.images or []:
+                    content.append(
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": image.mime_type,
+                                "data": image.image_data,
+                            },
+                        }
+                    )
+                content.append({"type": "text", "text": turn.message.text})
+
+            if turn.role == MessageRole.ASSISTANT:
+                for tool_call_request in turn.tool_call_requests or []:
+                    content.append(
+                        {
+                            "type": "tool_use",
+                            "id": tool_call_request.request_id,
+                            "name": tool_call_request.tool_name,
+                            "input": tool_call_request.tool_arguments.dict(),
+                        }
+                    )
+            elif turn.role == MessageRole.USER:
+                for tool_call_result in turn.tool_call_results or []:
+                    content.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": tool_call_result.request_id,
+                            "content": tool_call_result.tool_result,
+                        }
+                    )
 
             messages.append(
                 {
@@ -119,14 +140,14 @@ class ClaudeChatAction(LanguageAction):
 
         # parse response
         text_response = None
-        tool_requests = []
+        tool_call_requests = []
 
         for response_element in response.content:
             if response_element.type == "text":
                 text_response = response_element.text.strip(" \n")
             elif response_element.type == "tool_use":
-                tool_requests.append(
-                    ToolRequest(
+                tool_call_requests.append(
+                    ToolCallRequest(
                         request_id=response_element.id,
                         tool_name=response_element.name,
                         tool_arguments=Actions.create_brief(
@@ -137,13 +158,12 @@ class ClaudeChatAction(LanguageAction):
 
         turn = AssistantConversationTurn(
             message=Message(text=text_response) if text_response else None,
-            tool_requests=tool_requests,
+            tool_call_requests=tool_call_requests if len(tool_call_requests) > 0 else None,
         )
 
         # return result
         return CompletionResult(
             model_name=brief.model_name,
-            result=text_response or "",
             conversation_turn=turn,
             input_tokens=response.usage.input_tokens,
             output_tokens=response.usage.output_tokens,
@@ -151,4 +171,4 @@ class ClaudeChatAction(LanguageAction):
 
 
 #################################################
-ChatAction.register_implementation(["claude*"], ClaudeChatAction)
+CompletionAction.register_implementation(["claude*"], ClaudeChatAction)
