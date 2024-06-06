@@ -270,7 +270,6 @@ class CompletionBrief(ActionBrief):
             **kwargs,
         )
 
-
 #################################################
 class CompletionResult(ActionResult):
     """
@@ -363,6 +362,18 @@ class CompletionAction(Action):
                 return implementation
 
         raise ValueError(f"Model not found: {model_name}")
+
+    def __init__(self, max_batch_size: int = 1, thread_pool_size: int = 5):
+        """
+        Initialize the object.
+
+        Args:
+            max_batch_size (int): The maximum batch size for processing.
+            thread_pool_size (int): The size of the thread pool for parallel processing.
+        """
+        super().__init__(
+            CompletionAction.get_descriptor().name, max_batch_size, thread_pool_size
+        )
 
     def run(self, brief: ActionBrief) -> ActionResult:
         """

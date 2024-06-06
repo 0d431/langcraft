@@ -47,7 +47,7 @@ class VertexClient:
 
 
 #################################################
-class GeminiChatAction(LLMAction):
+class GeminiCompletionAction(LLMAction):
     """
     A chat action that uses Gemini to generate chats.
     """
@@ -77,6 +77,16 @@ class GeminiChatAction(LLMAction):
                 ]
             )
         ]
+
+    def __init__(self, max_batch_size: int = 1, thread_pool_size: int = 5):
+        """
+        Initialize.
+
+        Args:
+            max_batch_size (int, optional): The maximum batch size for processing. Defaults to 1.
+            thread_pool_size (int, optional): The size of the thread pool for processing. Defaults to 5.
+        """
+        super().__init__("_gemini_completion", max_batch_size, thread_pool_size)
 
     def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
@@ -184,7 +194,9 @@ class GeminiChatAction(LLMAction):
 
         turn = AssistantConversationTurn(
             message=Message(text=text_response) if text_response else None,
-            tool_call_requests=tool_call_requests if len(tool_call_requests) > 0 else None,
+            tool_call_requests=(
+                tool_call_requests if len(tool_call_requests) > 0 else None
+            ),
         )
 
         # return result
@@ -198,4 +210,4 @@ class GeminiChatAction(LLMAction):
 
 
 #################################################
-CompletionAction.register_implementation(["gemini*"], GeminiChatAction)
+CompletionAction.register_implementation(["gemini*"], GeminiCompletionAction)

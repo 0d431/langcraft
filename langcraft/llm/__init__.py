@@ -12,7 +12,7 @@ from langcraft.llm.llm_action import (
     LLMAction,
     Actions
 )
-from langcraft.llm.claude import ClaudeChatAction
-from langcraft.llm.gpt import GPTChatAction
-from langcraft.llm.gemini import GeminiChatAction
+from langcraft.llm.claude import ClaudeCompletionAction
+from langcraft.llm.gpt import GPTCompletionAction
+from langcraft.llm.gemini import GeminiCompletionAction
 

@@ -17,9 +17,9 @@ def get_weather(location: str, unit: str = "celsius") -> str:
 langcraft.Actions.generate_action(get_weather)
 
 brief = langcraft.CompletionBrief.from_prompt(
-    prompt="What is the temperature in New York?",
-    model_name=langcraft.LLMs.resolve_model("gemi"),
-    tools=["get_weather"],
+    prompt="Write a peom",
+    model_name=langcraft.LLMs.resolve_model("gpt-4o"),
+    tools=["get_weather","search_web_jina"],
 )
 
 result = langcraft.CompletionAction().run_with_tools(brief)
