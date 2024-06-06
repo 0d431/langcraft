@@ -44,7 +44,7 @@ class OpenAIClient:
             httpx_logger.setLevel(logging.ERROR)
 
             # OAI or Azure?
-            if os.environ["AZURE_OPENAI_API_KEY"].strip() != "":
+            if os.environ.get("AZURE_OPENAI_API_KEY", "").strip() != "":
                 cls._openai_client = openai.AzureOpenAI(
                     api_key=os.environ.get("AZURE_OPENAI_API_KEY"),
                     max_retries=5,
