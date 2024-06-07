@@ -32,10 +32,10 @@ with io.open(reqs_filename, encoding="utf-8") as reqs_file:
     reqs = reqs_file.read().splitlines()
 
 setup(
-    name="langcraft",
+    name="unimpossible-langcraft",
     version="0.1.0",
-    author="Market Logic Software",
-    author_email="info@marketlogicsoftware.com",
+    author="Olaf Lenzmann",
+    author_email="contact@unimpossible.com",
     description="Framework to abstract common LLMs for completion, supporting vision and function calling into native Python",
     long_description=readme,
     long_description_content_type="text/markdown",
