@@ -33,7 +33,7 @@ with io.open(reqs_filename, encoding="utf-8") as reqs_file:
 
 setup(
     name="unimpossible-langcraft",
-    version="0.1.0",
+    version="0.1.2",
     author="Olaf Lenzmann",
     author_email="contact@unimpossible.com",
     description="Framework to abstract common LLMs for completion, supporting vision and function calling into native Python",
@@ -42,6 +42,9 @@ setup(
     url="https://github.com/0d431/langcraft",
     packages=find_packages(exclude=["tests", "tests.*"]),
     include_package_data=True,
+    package_data={
+        'unimpossible-langcraft': ['data/*.json'],
+    },
     install_requires=reqs,
     license="Apache 2.0",
     classifiers=[

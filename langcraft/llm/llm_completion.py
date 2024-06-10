@@ -6,10 +6,11 @@ import base64
 import logging
 from langcraft.action import *
 from langcraft.action import ActionBrief, ActionResult
+from langcraft.utils import extract_tag
 from langcraft.llm.llm_models import LLMs
 
 """
-Module for defining the base classes for language actions.
+Module for defining the classes for completion actions.
 """
 
 
@@ -270,6 +271,7 @@ class CompletionBrief(ActionBrief):
             **kwargs,
         )
 
+
 #################################################
 class CompletionResult(ActionResult):
     """
@@ -295,6 +297,27 @@ class CompletionResult(ActionResult):
     class Config:
         # to prevent complaints about the model_name field
         protected_namespaces = ()
+
+    def get_text_completion(self) -> str:
+        """
+        Gets the text completion from the conversation turn.
+
+        Returns:
+            str: The text completion.
+        """
+        return self.conversation_turn.message.text or ""
+
+    def extract_tag(self, tag) -> List[str]:
+        """
+        Extracts all string contents enclosed in any set of pairs of XML tags in the given string.
+
+        Parameters:
+        tag (str): The XML tag to search for.
+
+        Returns:
+        List[str]: The extracted string contents enclosed in the XML tags.
+        """
+        return extract_tag(tag, self.get_text_completion())
 
 
 #################################################
@@ -363,18 +386,6 @@ class CompletionAction(Action):
 
         raise ValueError(f"Model not found: {model_name}")
 
-    def __init__(self, max_batch_size: int = 1, thread_pool_size: int = 5):
-        """
-        Initialize the object.
-
-        Args:
-            max_batch_size (int): The maximum batch size for processing.
-            thread_pool_size (int): The size of the thread pool for parallel processing.
-        """
-        super().__init__(
-            CompletionAction.get_descriptor().name, max_batch_size, thread_pool_size
-        )
-
     def run(self, brief: ActionBrief) -> ActionResult:
         """
         Executes the action specified by the given ActionBrief.
@@ -430,9 +441,9 @@ Actions.register(CompletionAction.get_descriptor())
 
 
 #################################################
-class LLMAction(Action):
+class CompletionDelegateAction(Action):
     """
-    Base class for actions that use a language model.
+    Base class for actual completion implementations.
     """
 
     def _preprocess(self, briefs: List[ActionBrief]):

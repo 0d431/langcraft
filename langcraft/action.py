@@ -97,7 +97,6 @@ class Action:
 
     def __init__(
         self,
-        name: str,
         max_batch_size: int = 1,
         thread_pool_size: int = 5,
     ):
@@ -105,19 +104,17 @@ class Action:
         Initializes an instance of the Action class.
 
         Args:
-            name (str): The name of the action.
             max_batch_size (int, optional): The maximum batch size for processing. Defaults to 1.
             thread_pool_size (int, optional): The number of threads in the thread pool. Defaults to 5.
         """
-        self.name = name
         self.max_batch_size = max_batch_size
         self.thread_pool_size = thread_pool_size
-    
+
     def get_name(self):
         """
         Returns the name of the action.
         """
-        return self.name
+        return self.__class__.__name__
 
     def _preprocess(self, _briefs: List[ActionBrief]):
         """
@@ -413,7 +410,7 @@ class Actions:
                     action=cls,
                     result=ResultClass,
                 )
-            
+
             def __init__(self):
                 super().__init__(name=DynamicAction.NAME)
 

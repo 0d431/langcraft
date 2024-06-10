@@ -2,6 +2,7 @@ import os
 import json
 import glob
 import fnmatch
+import pkg_resources
 
 """
 This module provides a class that represents the map of known LLMs.
@@ -28,7 +29,8 @@ class LLMs:
         if cls._model_map is None:
             cls._model_map = {}
 
-            for model_filename in glob.glob("./models*.json"):
+            file_path = pkg_resources.resource_filename("langcraft", "data/models*.json")
+            for model_filename in glob.glob(file_path):
                 with open(model_filename, "r") as f:
                     cls._model_map.update(json.load(f))
 
@@ -116,5 +118,14 @@ class LLMs:
         return (
             number_of_tokens
             * LLMs._get_model_metadata(model_name)["completion_cost"]
+            / 1.0e6
+        )
+
+    @classmethod
+    def get_embedding_cost(cls, model_name: str, number_of_tokens: int) -> float:
+        """Return the cost of the prompt in USD"""
+        return (
+            number_of_tokens
+            * LLMs._get_model_metadata(model_name)["embedding_cost"]
             / 1.0e6
         )

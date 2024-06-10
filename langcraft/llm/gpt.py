@@ -4,8 +4,9 @@ import json
 import httpx
 import openai
 import logging
-from langcraft.llm.llm_action import (
-    LLMAction,
+from langcraft.action import ActionBrief, ActionResult
+from langcraft.llm.llm_completion import (
+    CompletionDelegateAction,
     CompletionBrief,
     CompletionResult,
     CompletionAction,
@@ -15,6 +16,12 @@ from langcraft.llm.llm_action import (
     ToolCallRequest,
     Actions,
 )
+from langcraft.llm.llm_embedding import (
+    EmbeddingDelegateAction,
+    EmbeddingResult,
+    EmbeddingAction,
+)
+import tiktoken
 
 
 #################################################
@@ -63,7 +70,7 @@ class OpenAIClient:
 
 
 #################################################
-class GPTCompletionAction(LLMAction):
+class GPTCompletionAction(CompletionDelegateAction):
     """
     A chat action that uses GPT to generate chats.
     """
@@ -94,16 +101,6 @@ class GPTCompletionAction(LLMAction):
         ]
 
         return tools if len(tools) > 0 else None
-
-    def __init__(self, max_batch_size: int = 1, thread_pool_size: int = 5):
-        """
-        Initialize.
-
-        Args:
-            max_batch_size (int, optional): The maximum batch size for processing. Defaults to 1.
-            thread_pool_size (int, optional): The size of the thread pool for processing. Defaults to 5.
-        """
-        super().__init__("_gpt_completion", max_batch_size, thread_pool_size)
 
     def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
@@ -232,3 +229,53 @@ class GPTCompletionAction(LLMAction):
 
 #################################################
 CompletionAction.register_implementation(["gpt*"], GPTCompletionAction)
+
+
+#################################################
+class GPTEmbeddingAction(EmbeddingDelegateAction):
+
+    def __init__(self):
+        super().__init__(max_batch_size=20)
+
+    def _run_one_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
+        """
+        Executes the action on a batch of briefs.
+
+        Args:
+            briefs (List[ActionBrief]): The list of action briefs.
+
+        Returns:
+            List[ActionResult]: The list of action results.
+        """
+        # compile the texts
+        texts = [brief.text.replace("\n", " ").strip() for brief in briefs]
+
+        # obtain embeddings
+        client = OpenAIClient.get()
+
+        model_name = briefs[0].model_name
+        dimensions = briefs[0].dimensions or None
+
+        response = client.embeddings.create(
+            input=texts,
+            model=model_name,
+            dimensions=dimensions or openai.NotGiven(),
+        )
+
+        # parse response
+        results = []
+        encoding = tiktoken.get_encoding("cl100k_base")
+        for response_element, text in zip(response.data, texts):
+            results.append(
+                EmbeddingResult(
+                    model_name=model_name,
+                    embedding=response_element.embedding,
+                    tokens=len(encoding.encode(text)),
+                )
+            )
+
+        return results
+
+
+#################################################
+EmbeddingAction.register_implementation(["text-*"], GPTEmbeddingAction)

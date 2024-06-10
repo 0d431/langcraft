@@ -13,8 +13,8 @@ from vertexai.preview.generative_models import (
     FunctionDeclaration,
     Tool,
 )
-from langcraft.llm.llm_action import (
-    LLMAction,
+from langcraft.llm.llm_completion import (
+    CompletionDelegateAction,
     CompletionBrief,
     CompletionResult,
     CompletionAction,
@@ -47,7 +47,7 @@ class VertexClient:
 
 
 #################################################
-class GeminiCompletionAction(LLMAction):
+class GeminiCompletionAction(CompletionDelegateAction):
     """
     A chat action that uses Gemini to generate chats.
     """
@@ -63,7 +63,7 @@ class GeminiCompletionAction(LLMAction):
             Tool: A tool object.
 
         """
-        return [
+        tools = [
             Tool(
                 [
                     FunctionDeclaration(
@@ -71,22 +71,14 @@ class GeminiCompletionAction(LLMAction):
                         description=action_descriptor.description,
                         parameters=action_descriptor.brief.to_schema(),
                     )
-                    for action_descriptor in list(
-                        map(lambda tool_name: Actions.get(tool_name), tool_names)
-                    )
                 ]
+            )
+            for action_descriptor in list(
+                map(lambda tool_name: Actions.get(tool_name), tool_names)
             )
         ]
 
-    def __init__(self, max_batch_size: int = 1, thread_pool_size: int = 5):
-        """
-        Initialize.
-
-        Args:
-            max_batch_size (int, optional): The maximum batch size for processing. Defaults to 1.
-            thread_pool_size (int, optional): The size of the thread pool for processing. Defaults to 5.
-        """
-        super().__init__("_gemini_completion", max_batch_size, thread_pool_size)
+        return tools if len(tools) > 0 else None
 
     def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
@@ -118,7 +110,7 @@ class GeminiCompletionAction(LLMAction):
                     )
 
                 if turn.message.text:
-                    parts.append(Part.from_text(turn.message.text))
+                    parts.append(Part.from_text(turn.message.text.strip(" \n")))
 
                 if len(parts) > 0:
                     messages.append(

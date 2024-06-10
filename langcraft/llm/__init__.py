@@ -1,5 +1,5 @@
 from langcraft.llm.llm_models import LLMs
-from langcraft.llm.llm_action import (
+from langcraft.llm.llm_completion import (
     CompletionBrief,
     CompletionResult,
     Image,
@@ -9,10 +9,14 @@ from langcraft.llm.llm_action import (
     AssistantConversationTurn,
     CompletionAction,
     ActionDescriptor,
-    LLMAction,
     Actions
 )
+from langcraft.llm.llm_embedding import (
+    EmbeddingBrief,
+    EmbeddingResult,
+    EmbeddingAction
+)
 from langcraft.llm.claude import ClaudeCompletionAction
-from langcraft.llm.gpt import GPTCompletionAction
+from langcraft.llm.gpt import GPTCompletionAction, GPTEmbeddingAction
 from langcraft.llm.gemini import GeminiCompletionAction
 

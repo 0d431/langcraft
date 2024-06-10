@@ -2,7 +2,7 @@ import os
 from typing import List, Dict
 import httpx
 import anthropic
-from langcraft.llm.llm_action import (
+from langcraft.llm.llm_completion import (
     CompletionBrief,
     CompletionAction,
     CompletionResult,
@@ -11,7 +11,7 @@ from langcraft.llm.llm_action import (
     AssistantConversationTurn,
     ToolCallRequest,
     Actions,
-    LLMAction,
+    CompletionDelegateAction,
 )
 
 
@@ -44,7 +44,7 @@ class AnthropicClient:
 
 
 #################################################
-class ClaudeCompletionAction(LLMAction):
+class ClaudeCompletionAction(CompletionDelegateAction):
     """
     A chat action that uses Claude to generate chats.
     """
@@ -70,16 +70,6 @@ class ClaudeCompletionAction(LLMAction):
                 map(lambda tool_name: Actions.get(tool_name), tool_names)
             )
         ]
-
-    def __init__(self, max_batch_size: int = 1, thread_pool_size: int = 5):
-        """
-        Initialize.
-
-        Args:
-            max_batch_size (int, optional): The maximum batch size for processing. Defaults to 1.
-            thread_pool_size (int, optional): The size of the thread pool for processing. Defaults to 5.
-        """
-        super().__init__("_claude_completion", max_batch_size, thread_pool_size)
 
     def _run_one(self, brief: CompletionBrief) -> CompletionResult:
         """
