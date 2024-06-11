@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unimpossible-langcraft"
+version = "0.1.2"
+authors = [
+  { name = "Olaf Lenzmann", email = "contact@unimpossible.com" },
+]
+description = "Framework to abstract common LLMs for completion, supporting vision and function calling into native Python"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache 2.0" }
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dynamic = ["dependencies"]  
+
+[project.urls]
+"Homepage" = "https://github.com/0d431/langcraft"
+
+[tool.setuptools.packages.find]
+exclude = ["tests", "tests.*"]
+
+[tool.setuptools.package-data]
+"unimpossible_langcraft" = ["data/*.json"]
