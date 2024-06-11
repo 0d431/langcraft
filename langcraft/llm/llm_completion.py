@@ -125,6 +125,24 @@ class ConversationTurn(BaseModel):
         description="The content of the respective party's message.", default=None
     )
 
+    @classmethod
+    def from_dict(cls, data: Dict):
+        """
+        Creates a ConversationTurn from a dictionary.
+
+        Args:
+            data (Dict): The dictionary to create the ConversationTurn from.
+
+        Returns:
+            ConversationTurn: The generated ConversationTurn.
+        """
+        if MessageRole.USER == data["role"]:
+            return UserConversationTurn(message=Message(**data))
+        elif MessageRole.ASSISTANT == data["role"]:
+            return AssistantConversationTurn(message=Message(**data))
+
+        raise ValueError("Invalid ConversationTurn data.")
+
 
 #################################################
 class UserConversationTurn(ConversationTurn):
@@ -386,7 +404,8 @@ class CompletionAction(Action):
 
         raise ValueError(f"Model not found: {model_name}")
 
-    def run(self, brief: ActionBrief) -> ActionResult:
+    @classmethod
+    def run(cls, brief: ActionBrief) -> ActionResult:
         """
         Executes the action specified by the given ActionBrief.
 
@@ -396,12 +415,23 @@ class CompletionAction(Action):
         Returns:
             ActionResult: The result of executing the action.
         """
+
+        # get the model and max_tokens settings
+        model_name = LLMs.resolve_model(brief.model_name)
+        if model_name is None:
+            raise ValueError(f"Model not found: {brief.model_name}")
+        brief.model_name = model_name
+
+        if not brief.max_tokens:
+            brief.max_tokens = LLMs.get_max_output_tokens(brief.model_name)
+
         implementation = CompletionAction._get_implementation(brief.model_name)
 
         return implementation().run(brief)
 
+    @classmethod
     def run_with_tools(
-        self, brief: CompletionBrief, max_iterations=10
+        cls, brief: CompletionBrief, max_iterations=10
     ) -> CompletionResult:
         """
         Run the language model with additional tools.
@@ -414,14 +444,43 @@ class CompletionAction(Action):
             CompletionResult: The result of the completion process.
         """
 
-        result = self.run(brief)
+        result = CompletionAction.run(brief)
 
         if brief.extend_conversation(result.conversation_turn, max_iterations > 0):
-            return self.run_with_tools(brief, max_iterations - 1)
+            return CompletionAction.run_with_tools(brief, max_iterations - 1)
 
         return result
 
-    def run_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
+    @classmethod
+    def run_single_completion(
+        cls, model_name: str, prompt: str, system: str = "", tag_to_extract: str = None
+    ) -> str:
+        """
+        Run a single completion for a given model and prompt.
+
+        Args:
+            model_name (str): The name of the model to use.
+            prompt (str): The prompt to use.
+            system (str, optional): The system prompt. Defaults to "".
+
+        Returns:
+            str: The completion result.
+        """
+        result = cls.run(
+            CompletionBrief.from_prompt(
+                model_name=model_name,
+                prompt=prompt,
+                system=system,
+            )
+        )
+        
+        if tag_to_extract:
+            return result.extract_tag(tag_to_extract)
+        else:
+            return result.get_text_completion()
+
+    @classmethod
+    def run_batch(cls, briefs: List[ActionBrief]) -> List[ActionResult]:
         """
         Runs a batch of action briefs.
 
@@ -431,7 +490,23 @@ class CompletionAction(Action):
         Returns:
             List[ActionResult]: A list of action results.
         """
-        implementation = CompletionAction._get_implementation(briefs[0].model_name)
+        # get the model and max_tokens settings
+        model_name = None
+        for brief in briefs:
+            model_name = LLMs.resolve_model(brief.model_name)
+
+            if model_name is None:
+                raise ValueError(f"Model not found: {brief.model_name}")
+            if model_name != brief.model_name:
+                raise ValueError(
+                    f"Model mismatch in batch: {model_name} != {brief.model_name}"
+                )
+            brief.model_name = model_name
+
+            if not brief.max_tokens:
+                brief.max_tokens = LLMs.get_max_output_tokens(brief.model_name)
+
+        implementation = CompletionAction._get_implementation(model_name)
 
         return implementation().run_batch(briefs)
 
@@ -448,38 +523,13 @@ class CompletionDelegateAction(Action):
 
     def _preprocess(self, briefs: List[ActionBrief]):
         """
-        Preprocesses the given list of action briefs to resolve the model name if needed.
+        Preprocesses the given list of ActionBrief objects.
 
         Args:
-            briefs (List[ActionBrief]): The list of action briefs to be preprocessed.
-
-        Raises:
-            ValueError: If an invalid brief type is encountered.
+            briefs (List[ActionBrief]): A list of ActionBrief objects to be preprocessed.
         """
-        # get the model and max_tokens settings
-        model_name = None
+        # log request
         for brief in briefs:
-            if isinstance(brief, CompletionBrief):
-                brief.model_name = LLMs.resolve_model(brief.model_name)
-
-                if not model_name:
-                    model_name = brief.model_name
-                elif model_name != brief.model_name:
-                    raise ValueError(
-                        f"Model mismatch in batch: {model_name} != {brief.model_name}"
-                    )
-
-                if LLMs.resolve_model(brief.model_name) is None:
-                    raise ValueError(f"Model not found: {brief.model_name}")
-
-                if not brief.max_tokens:
-                    brief.max_tokens = LLMs.get_max_output_tokens(brief.model_name)
-            else:
-                raise ValueError(
-                    f"Invalid brief type: {type(brief)}; expected LanguageActionBrief."
-                )
-
-            # log request
             logging.getLogger("langcraft").info(
                 brief.__class__.__name__ + ":\n" + brief.model_dump_json(indent=2)
             )

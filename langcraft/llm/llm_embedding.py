@@ -119,7 +119,8 @@ class EmbeddingAction(Action):
 
         raise ValueError(f"Model not found: {model_name}")
 
-    def run(self, brief: ActionBrief) -> ActionResult:
+    @classmethod
+    def run(cls, brief: ActionBrief) -> ActionResult:
         """
         Executes the action specified by the given ActionBrief.
 
@@ -133,7 +134,8 @@ class EmbeddingAction(Action):
 
         return implementation().run(brief)
 
-    def run_batch(self, briefs: List[ActionBrief]) -> List[ActionResult]:
+    @classmethod
+    def run_batch(cls, briefs: List[ActionBrief]) -> List[ActionResult]:
         """
         Runs a batch of action briefs.
 

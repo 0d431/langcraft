@@ -75,9 +75,9 @@ class LLMs:
             # use default LLM
             return os.environ.get("LANGCRAFT_DEFAULT_LLM", "claude-3-haiku-20240307")
 
-        if model_name.startswith("env:"):
+        if model_name.startswith("$"):
             # retrieve the environment variable
-            model_name = os.environ.get(model_name[4:], model_name)
+            model_name = os.environ.get(model_name[1:], model_name)
 
         # find best prefix match
         best_match = None
