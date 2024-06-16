@@ -19,10 +19,11 @@ from langcraft.llm.llm_completion import (
     CompletionResult,
     CompletionAction,
     Message,
-    MessageRole,
     AssistantConversationTurn,
     ToolCallRequest,
     Actions,
+    USER_ROLE,
+    ASSISTANT_ROLE,
 )
 
 
@@ -116,11 +117,11 @@ class GeminiCompletionAction(CompletionDelegateAction):
                     messages.append(
                         Content(
                             parts=parts,
-                            role="user" if turn.role == MessageRole.USER else "model",
+                            role="user" if turn.role == USER_ROLE else "model",
                         )
                     )
 
-            if turn.role == MessageRole.ASSISTANT:
+            if turn.role == ASSISTANT_ROLE:
                 for tool_call_request in turn.tool_call_requests or []:
                     messages.append(
                         Content(
@@ -137,7 +138,7 @@ class GeminiCompletionAction(CompletionDelegateAction):
                             role="model",
                         )
                     )
-            elif turn.role == MessageRole.USER:
+            elif turn.role == USER_ROLE:
                 for tool_call_result in turn.tool_call_results or []:
                     messages.append(
                         Content(

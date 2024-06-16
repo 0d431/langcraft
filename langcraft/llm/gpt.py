@@ -11,10 +11,11 @@ from langcraft.llm.llm_completion import (
     CompletionResult,
     CompletionAction,
     Message,
-    MessageRole,
     AssistantConversationTurn,
     ToolCallRequest,
     Actions,
+    USER_ROLE,
+    ASSISTANT_ROLE,
 )
 from langcraft.llm.llm_embedding import (
     EmbeddingDelegateAction,
@@ -138,7 +139,7 @@ class GPTCompletionAction(CompletionDelegateAction):
                     )
                 content.append({"type": "text", "text": turn.message.text})
 
-            if turn.role == MessageRole.ASSISTANT:
+            if turn.role == ASSISTANT_ROLE:
                 tool_call_requests = []
                 for tool_call_request in turn.tool_call_requests or []:
                     tool_call_requests.append(
@@ -161,7 +162,7 @@ class GPTCompletionAction(CompletionDelegateAction):
                         "tool_calls": tool_call_requests,
                     }
                 )
-            elif turn.role == MessageRole.USER:
+            elif turn.role == USER_ROLE:
                 if len(content) > 0:
                     messages.append(
                         {

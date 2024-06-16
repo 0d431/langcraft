@@ -411,9 +411,6 @@ class Actions:
                     result=ResultClass,
                 )
 
-            def __init__(self):
-                super().__init__(name=DynamicAction.NAME)
-
             def _run_one(self, brief: Any) -> ActionResult:
                 func_args = {field: getattr(brief, field) for field in fields}
                 return ResultClass(result=func(**func_args))

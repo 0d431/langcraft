@@ -4,12 +4,14 @@ from langcraft.llm.llm_completion import (
     CompletionResult,
     Image,
     Message,
-    MessageRole,
+    ConversationTurn,
     UserConversationTurn,
     AssistantConversationTurn,
     CompletionAction,
     ActionDescriptor,
-    Actions
+    Actions,
+    USER_ROLE,
+    ASSISTANT_ROLE
 )
 from langcraft.llm.llm_embedding import (
     EmbeddingBrief,

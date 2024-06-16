@@ -53,13 +53,8 @@ class Image(BaseModel):
 
 
 #################################################
-class MessageRole(Enum):
-    """
-    Enum for the role of the party uttering a message in a chat.
-    """
-
-    USER = "user"
-    ASSISTANT = "assistant"
+USER_ROLE = "user"
+ASSISTANT_ROLE = "assistant"
 
 
 #################################################
@@ -119,7 +114,7 @@ class ConversationTurn(BaseModel):
     Represents a single turn in a conversation.
     """
 
-    role: MessageRole = Field(description="The role uttering the message.")
+    role: str = Field(description="The role uttering the message.")
 
     message: Optional[Message] = Field(
         description="The content of the respective party's message.", default=None
@@ -136,10 +131,10 @@ class ConversationTurn(BaseModel):
         Returns:
             ConversationTurn: The generated ConversationTurn.
         """
-        if MessageRole.USER == data["role"]:
-            return UserConversationTurn(message=Message(**data))
-        elif MessageRole.ASSISTANT == data["role"]:
-            return AssistantConversationTurn(message=Message(**data))
+        if USER_ROLE == data["role"]:
+            return UserConversationTurn(message=Message(**data["message"]))
+        elif ASSISTANT_ROLE == data["role"]:
+            return AssistantConversationTurn(message=Message(**data["message"]))
 
         raise ValueError("Invalid ConversationTurn data.")
 
@@ -150,15 +145,31 @@ class UserConversationTurn(ConversationTurn):
     Represents a single turn in a conversation by a user.
     """
 
-    role: MessageRole = Field(
+    role: str = Field(
         description="The role uttering the message.",
-        default=MessageRole.USER,
+        default=USER_ROLE,
         frozen=True,
     )
 
     tool_call_results: Optional[List[ToolCallResult]] = Field(
         description="The tool responses, if any.", default=None
     )
+
+    @classmethod
+    def from_text(cls, text: str, **kwargs):
+        """
+        Creates a UserConversationTurn from a text.
+
+        Args:
+            text (str): The prompt for the conversation.
+
+        Returns:
+            UserConversationTurn: The generated UserConversationTurn.
+        """
+        return cls(
+            message=Message(text=text),
+            **kwargs,
+        )
 
 
 #################################################
@@ -167,9 +178,9 @@ class AssistantConversationTurn(ConversationTurn):
     Represents a single turn in a conversation by the assistant.
     """
 
-    role: MessageRole = Field(
+    role: str = Field(
         description="The role uttering the message.",
-        default=MessageRole.ASSISTANT,
+        default=ASSISTANT_ROLE,
         frozen=True,
     )
 
@@ -178,12 +189,18 @@ class AssistantConversationTurn(ConversationTurn):
         default=None,
     )
 
-    def run_tools(self):
+    def run_tools(self) -> List[ToolCallResult]:
         """
         Runs the tools requested by iterating over the tool_requests list and calling the run_tool method for each tool_request.
         """
-        for tool_call_request in self.tool_call_requests or []:
-            tool_call_request.run_tool()
+        return [
+            ToolCallResult(
+                request_id=tool_call_request.request_id,
+                tool_name=tool_call_request.tool_name,
+                tool_result=tool_call_request.run_tool(),
+            )
+            for tool_call_request in self.tool_call_requests or []
+        ]
 
 
 #################################################
@@ -209,7 +226,7 @@ class CompletionBrief(ActionBrief):
     )
 
     temperature: Optional[float] = Field(
-        description="The sampling temperature.", default=0.0
+        description="The sampling temperature.", default=0.7
     )
 
     stop: Optional[str] = Field(description="The stop sequence.", default=None)
@@ -227,7 +244,7 @@ class CompletionBrief(ActionBrief):
         """
         return (
             len(self.conversation) > 0
-            and self.conversation[-1].role == MessageRole.ASSISTANT
+            and self.conversation[-1].role == ASSISTANT_ROLE
             and self.conversation[-1].tool_call_requests
             and len(self.conversation[-1].tool_call_requests) > 0
         )
@@ -250,16 +267,7 @@ class CompletionBrief(ActionBrief):
         if self.has_pending_tool_calls() and run_tools:
             self.extend_conversation(
                 UserConversationTurn(
-                    tool_call_results=[
-                        ToolCallResult(
-                            request_id=tool_call_request.request_id,
-                            tool_name=tool_call_request.tool_name,
-                            tool_result=tool_call_request.run_tool().result,
-                        )
-                        for tool_call_request in self.conversation[
-                            -1
-                        ].tool_call_requests
-                    ]
+                    tool_call_results=self.conversation[-1].run_tools()
                 )
             )
 
@@ -473,7 +481,7 @@ class CompletionAction(Action):
                 system=system,
             )
         )
-        
+
         if tag_to_extract:
             return result.extract_tag(tag_to_extract)
         else:

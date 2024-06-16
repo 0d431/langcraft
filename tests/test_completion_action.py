@@ -15,7 +15,7 @@ def test_simple_completion():
         assert result.success
         assert result.model_name.startswith(model)
         assert result.conversation_turn
-        assert result.conversation_turn.role == langcraft.MessageRole.ASSISTANT
+        assert result.conversation_turn.role == langcraft.ASSISTANT_ROLE
         assert len(result.conversation_turn.message.text) > 0
         assert result.input_tokens > 0
         assert result.output_tokens > 0
@@ -40,7 +40,7 @@ def test_vision_completion():
         assert result.success
         assert result.model_name.startswith(model)
         assert result.conversation_turn
-        assert result.conversation_turn.role == langcraft.MessageRole.ASSISTANT
+        assert result.conversation_turn.role == langcraft.ASSISTANT_ROLE
         assert len(result.conversation_turn.message.text) > 0
         assert "triangle" in result.conversation_turn.message.text.lower()
         assert result.input_tokens > 0
@@ -74,7 +74,7 @@ def test_function_call_completion():
         assert result.success
         assert result.model_name.startswith(model)
         assert result.conversation_turn
-        assert result.conversation_turn.role == langcraft.MessageRole.ASSISTANT
+        assert result.conversation_turn.role == langcraft.ASSISTANT_ROLE
         assert result.conversation_turn.tool_call_requests
         assert len(result.conversation_turn.tool_call_requests) == 1
         assert result.conversation_turn.tool_call_requests[0].tool_name == "get_weather"

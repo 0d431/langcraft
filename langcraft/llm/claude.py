@@ -7,11 +7,12 @@ from langcraft.llm.llm_completion import (
     CompletionAction,
     CompletionResult,
     Message,
-    MessageRole,
     AssistantConversationTurn,
     ToolCallRequest,
     Actions,
     CompletionDelegateAction,
+    USER_ROLE,
+    ASSISTANT_ROLE,
 )
 
 
@@ -99,7 +100,7 @@ class ClaudeCompletionAction(CompletionDelegateAction):
                     )
                 content.append({"type": "text", "text": turn.message.text})
 
-            if turn.role == MessageRole.ASSISTANT:
+            if turn.role == ASSISTANT_ROLE:
                 for tool_call_request in turn.tool_call_requests or []:
                     content.append(
                         {
@@ -109,19 +110,19 @@ class ClaudeCompletionAction(CompletionDelegateAction):
                             "input": tool_call_request.tool_arguments.dict(),
                         }
                     )
-            elif turn.role == MessageRole.USER:
+            elif turn.role == USER_ROLE:
                 for tool_call_result in turn.tool_call_results or []:
                     content.append(
                         {
                             "type": "tool_result",
                             "tool_use_id": tool_call_result.request_id,
-                            "content": tool_call_result.tool_result,
+                            "content": tool_call_result.tool_result.result,
                         }
                     )
 
             messages.append(
                 {
-                    "role": "user" if turn.role == MessageRole.USER else "assistant",
+                    "role": "user" if turn.role == USER_ROLE else "assistant",
                     "content": content,
                 }
             )
