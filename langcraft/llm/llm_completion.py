@@ -4,6 +4,7 @@ from fnmatch import fnmatch
 from typing import Optional, List, Union, Dict
 import base64
 import logging
+import click
 from langcraft.action import *
 from langcraft.action import ActionBrief, ActionResult
 from langcraft.utils import extract_tag
@@ -193,6 +194,9 @@ class AssistantConversationTurn(ConversationTurn):
         """
         Runs the tools requested by iterating over the tool_requests list and calling the run_tool method for each tool_request.
         """
+        click.echo(
+            f"Running tools {','.join([request.tool_name for request in self.tool_call_requests])}"
+        )
         return [
             ToolCallResult(
                 request_id=tool_call_request.request_id,
@@ -266,8 +270,8 @@ class CompletionBrief(ActionBrief):
 
         if self.has_pending_tool_calls() and run_tools:
             self.extend_conversation(
-                UserConversationTurn(
-                    tool_call_results=self.conversation[-1].run_tools()
+                UserConversationTurn.from_text(
+                    text="", tool_call_results=self.conversation[-1].run_tools()
                 )
             )
 

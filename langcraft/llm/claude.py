@@ -86,6 +86,28 @@ class ClaudeCompletionAction(CompletionDelegateAction):
         messages = []
         for turn in brief.conversation:
             content = []
+
+            if turn.role == ASSISTANT_ROLE:
+                for tool_call_request in turn.tool_call_requests or []:
+                    content.append(
+                        {
+                            "type": "tool_use",
+                            "id": tool_call_request.request_id,
+                            "name": tool_call_request.tool_name,
+                            "input": tool_call_request.tool_arguments.dict(),
+                        }
+                    )
+
+            if turn.role == USER_ROLE:
+                for tool_call_result in turn.tool_call_results or []:
+                    content.append(
+                        {
+                            "type": "tool_result",
+                            "tool_use_id": tool_call_result.request_id,
+                            "content": str(tool_call_result.tool_result.result),
+                        }
+                    )
+
             if turn.message:
                 for image in turn.message.images or []:
                     content.append(
@@ -99,26 +121,6 @@ class ClaudeCompletionAction(CompletionDelegateAction):
                         }
                     )
                 content.append({"type": "text", "text": turn.message.text})
-
-            if turn.role == ASSISTANT_ROLE:
-                for tool_call_request in turn.tool_call_requests or []:
-                    content.append(
-                        {
-                            "type": "tool_use",
-                            "id": tool_call_request.request_id,
-                            "name": tool_call_request.tool_name,
-                            "input": tool_call_request.tool_arguments.dict(),
-                        }
-                    )
-            elif turn.role == USER_ROLE:
-                for tool_call_result in turn.tool_call_results or []:
-                    content.append(
-                        {
-                            "type": "tool_result",
-                            "tool_use_id": tool_call_result.request_id,
-                            "content": tool_call_result.tool_result.result,
-                        }
-                    )
 
             messages.append(
                 {
