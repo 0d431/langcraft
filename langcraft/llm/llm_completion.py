@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field
 from fnmatch import fnmatch
 from typing import Optional, List, Union, Dict
 import base64
+import json
 import logging
 import click
 from langcraft.action import *
@@ -121,6 +122,23 @@ class ConversationTurn(BaseModel):
         description="The content of the respective party's message.", default=None
     )
 
+    def _text(self):
+        """
+        Returns the text part of the message.
+        """
+        if self.message is None:
+            return ""
+
+        return self.message.text or ""
+
+    def to_str(self):
+        """
+        Returns the message for human display.
+        """
+        return f"{self.role.upper()}\n\n{self._text()}\n"
+
+        return m
+
     @classmethod
     def from_dict(cls, data: Dict):
         """
@@ -156,6 +174,16 @@ class UserConversationTurn(ConversationTurn):
         description="The tool responses, if any.", default=None
     )
 
+    def to_str(self):
+        """
+        Returns the message for human display.
+        """
+        tool_str = ""
+        for tool_result in self.tool_call_results or []:
+            tool_str += f"---\n{tool_result.tool_name}:\n{tool_result.tool_result.model_dump_json(indent=2)}\n"
+
+        return super().to_str() + tool_str
+
     @classmethod
     def from_text(cls, text: str, **kwargs):
         """
@@ -189,6 +217,25 @@ class AssistantConversationTurn(ConversationTurn):
         description="The tool call requests, if any.",
         default=None,
     )
+
+    def to_str(self):
+        """
+        Returns the message for human display.
+        """
+        tool_str = ""
+        for tool_request in self.tool_call_requests or []:
+            tool_str += f"---\n{tool_request.tool_name}:\n{tool_request.tool_arguments.model_dump_json(indent=2)}\n"
+
+        return super().to_str() + tool_str
+
+    def is_requesting_tool_calls(self):
+        """
+        Checks if there are any tool call requests in the conversation turn.
+
+        Returns:
+            bool: True if there are pending tool calls, False otherwise.
+        """
+        return self.tool_call_requests and len(self.tool_call_requests) > 0
 
     def run_tools(self) -> List[ToolCallResult]:
         """
@@ -249,8 +296,7 @@ class CompletionBrief(ActionBrief):
         return (
             len(self.conversation) > 0
             and self.conversation[-1].role == ASSISTANT_ROLE
-            and self.conversation[-1].tool_call_requests
-            and len(self.conversation[-1].tool_call_requests) > 0
+            and self.conversation[-1].is_requesting_tool_calls()
         )
 
     def extend_conversation(
