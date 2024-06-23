@@ -20,6 +20,13 @@
         "prompt_cost": 15.0,
         "completion_cost": 75.0
     },
+    "claude-3-5-sonnet-20240620": {
+        "model_type": "completion",
+        "context_window_size": 200000,
+        "max_output_tokens": 4096,
+        "prompt_cost": 3.0,
+        "completion_cost": 15.0
+    },
     "gpt-3.5-turbo": {
         "model_type": "completion",
         "context_window_size": 16000,
